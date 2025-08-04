@@ -7,6 +7,9 @@ import {
 	Param,
 	UseGuards,
 	Request,
+	HttpStatus,
+	NotFoundException,
+	BadRequestException,
 } from '@nestjs/common';
 import {
 	ApiTags,
@@ -21,6 +24,8 @@ import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
 import { SimpleService } from './simple.service';
 import { AuthGuard } from '../auth/guards/Auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
+import { ApiMessageKey } from '@/common/constants/message.constants';
+import { ApiResponseDto } from '@/common/classes/response.dto';
 
 export class SimpleChatDto {
 	@ApiProperty({
@@ -74,12 +79,12 @@ export class SimpleController {
 	async createSession(@GetUser('id') userId: string) {
 		const sessionId = await this.simpleService.createSession(userId);
 
-		return {
-			sessionId,
-			message:
-				'Simple AI session created. You can now chat, execute code, browse web, and more!',
-			created: new Date().toISOString(),
-		};
+		return new ApiResponseDto({
+			statusCode: HttpStatus.OK,
+			data: sessionId,
+			message: ApiMessageKey.CHAT_SESSION_INITIALIZED_SUCCESS,
+			pagination: null,
+		});
 	}
 
 	@Post('chat')
@@ -110,7 +115,7 @@ export class SimpleController {
 				summary: 'Web browsing request',
 				value: {
 					message:
-						'Go to https://news.ycombinator.com and tell me the top 3 stories',
+						'Go to https://duonguyen.site/blogs and tell me the top 3 blogs',
 					sessionId: 'simple_1234567890_abc123',
 				},
 			},
@@ -149,10 +154,16 @@ export class SimpleController {
 		description: 'Invalid request or session not found',
 	})
 	async chat(@Body() chatDto: SimpleChatDto, @GetUser('id') userId: string) {
-		return this.simpleService.chat({
+		const response = await this.simpleService.chat({
 			message: chatDto.message,
 			sessionId: chatDto.sessionId,
 			userId,
+		});
+		return new ApiResponseDto({
+			statusCode: HttpStatus.OK,
+			data: response,
+			message: ApiMessageKey.CHAT_COMPLETED_SUCCESS,
+			pagination: null,
 		});
 	}
 
@@ -200,13 +211,15 @@ export class SimpleController {
 		const session = await this.simpleService.getSessionList(userId);
 
 		if (!session) {
-			return {
-				error: 'Session not found',
-				userId,
-			};
+			throw new NotFoundException('Session chat not found');
 		}
 
-		return session;
+		return new ApiResponseDto({
+			statusCode: HttpStatus.OK,
+			data: session,
+			message: ApiMessageKey.GET_SESSION_LIST_SUCCESS,
+			pagination: null,
+		});
 	}
 
 	@Get('sessions/:sessionId')
@@ -250,13 +263,15 @@ export class SimpleController {
 		const session = await this.simpleService.getSession(sessionId);
 
 		if (!session) {
-			return {
-				error: 'Session not found',
-				sessionId,
-			};
+			throw new NotFoundException('Session chat not found');
 		}
 
-		return session;
+		return new ApiResponseDto({
+			statusCode: HttpStatus.OK,
+			data: session,
+			message: ApiMessageKey.GET_SESSION_SUCCESS,
+			pagination: null,
+		});
 	}
 
 	@Delete('sessions/:sessionId')
@@ -282,53 +297,17 @@ export class SimpleController {
 		@GetUser('id') userId: string
 	) {
 		const success = await this.simpleService.deleteSession(sessionId, userId);
-
-		return {
-			success,
-			message: success
-				? 'Session deleted and resources cleaned up successfully'
-				: 'Failed to delete session',
-			sessionId,
-		};
-	}
-
-	@Get('health')
-	@ApiOperation({
-		summary: 'Simple API health check',
-		description:
-			'Check if the simple API is running and ready to accept requests',
-	})
-	@ApiResponse({
-		status: 200,
-		description: 'Service is healthy',
-		schema: {
-			type: 'object',
-			properties: {
-				status: { type: 'string' },
-				message: { type: 'string' },
-				timestamp: { type: 'string', format: 'date-time' },
-				capabilities: {
-					type: 'array',
-					items: { type: 'string' },
-				},
+		if (!success) {
+			throw new BadRequestException('Failed to delete session');
+		}
+		return new ApiResponseDto({
+			statusCode: HttpStatus.OK,
+			data: {
+				success,
+				sessionId,
 			},
-		},
-	})
-	async health() {
-		return {
-			status: 'healthy',
-			message: 'Simple AI API is running and ready',
-			timestamp: new Date().toISOString(),
-			capabilities: [
-				'Natural language chat',
-				'Code execution (Python, Node.js, Bash)',
-				'Web browsing and scraping',
-				'File operations',
-				'Data processing',
-				'Docker container management',
-				'Session persistence',
-				'Tool orchestration',
-			],
-		};
+			message: ApiMessageKey.DELETE_SESSION_SUCCESS,
+			pagination: null,
+		});
 	}
 }

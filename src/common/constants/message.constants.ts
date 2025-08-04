@@ -1,4 +1,5 @@
 export enum ApiMessageKey {
+	GET_HELLO_SUCCESS = 'GET_HELLO_SUCCESS',
 	LOGIN_SUCCESS = 'LOGIN_SUCCESS',
 	LOGOUT_SUCCESS = 'LOGOUT_SUCCESS',
 	CHANGE_PASSWORD_SUCCESS = 'CHANGE_PASSWORD_SUCCESS',
@@ -25,6 +26,11 @@ export enum ApiMessageKey {
 	USAGE_STATISTICS_RETRIEVED_SUCCESS = 'USAGE_STATISTICS_RETRIEVED_SUCCESS',
 	API_KEY_ROTATED_SUCCESS = 'API_KEY_ROTATED_SUCCESS',
 	CHAT_SESSION_INITIALIZED_SUCCESS = 'CHAT_SESSION_INITIALIZED_SUCCESS',
+	GET_SESSION_LIST_SUCCESS = 'GET_SESSION_LIST_SUCCESS',
+	GET_SESSION_SUCCESS = 'GET_SESSION_SUCCESS',
+	DELETE_SESSION_SUCCESS = 'DELETE_SESSION_SUCCESS',
+	GET_ALL_AGENTS_SUCCESS = 'GET_ALL_AGENTS_SUCCESS',
+	GET_AGENT_INFO_SUCCESS = 'GET_AGENT_INFO_SUCCESS',
 	AGENT_TASK_COMPLETED_SUCCESS = 'AGENT_TASK_COMPLETED_SUCCESS',
 	USER_FLOW_STATUS_RETRIEVED_SUCCESS = 'USER_FLOW_STATUS_RETRIEVED_SUCCESS',
 	FLOW_SESSION_COMPLETED_SUCCESS = 'FLOW_SESSION_COMPLETED_SUCCESS',
@@ -32,9 +38,36 @@ export enum ApiMessageKey {
 	USER_PROGRESS_RETRIEVED_SUCCESS = 'USER_PROGRESS_RETRIEVED_SUCCESS',
 	RECOMMENDATIONS_RETRIEVED_SUCCESS = 'RECOMMENDATIONS_RETRIEVED_SUCCESS',
 	BATCH_EXECUTION_COMPLETED_SUCCESS = 'BATCH_EXECUTION_COMPLETED_SUCCESS',
+	GET_ALL_TOOLS_SUCCESS = 'GET_ALL_TOOLS_SUCCESS',
+	GET_TOOL_INFO_SUCCESS = 'GET_TOOL_INFO_SUCCESS',
+	CHAT_HISTORY_RETRIEVED_SUCCESS = 'CHAT_HISTORY_RETRIEVED_SUCCESS',
+	CHAT_HISTORY_CLEARED_SUCCESS = 'CHAT_HISTORY_CLEARED_SUCCESS',
+	CHAT_SESSION_STATS_RETRIEVED_SUCCESS = 'CHAT_SESSION_STATS_RETRIEVED_SUCCESS',
+	CHAT_MESSAGE_DELETED_SUCCESS = 'CHAT_MESSAGE_DELETED_SUCCESS',
+	DOCKER_EXECUTE_CODE_SUCCESS = 'DOCKER_EXECUTE_CODE_SUCCESS',
+	DOCKER_CREATE_CONTAINER_SUCCESS = 'DOCKER_CREATE_CONTAINER_SUCCESS',
+	DOCKER_LIST_CONTAINERS_SUCCESS = 'DOCKER_LIST_CONTAINERS_SUCCESS',
+	DOCKER_STOP_CONTAINER_SUCCESS = 'DOCKER_STOP_CONTAINER_SUCCESS',
+	DOCKER_CLEANUP_SESSION_SUCCESS = 'DOCKER_CLEANUP_SESSION_SUCCESS',
+	DOCKER_GET_CONTAINER_LOGS_SUCCESS = 'DOCKER_GET_CONTAINER_LOGS_SUCCESS',
+	EDIT_TASK_CREATED_SUCCESS = 'EDIT_TASK_CREATED_SUCCESS',
+	EDIT_TASK_RETRIEVED_SUCCESS = 'EDIT_TASK_RETRIEVED_SUCCESS',
+	EDIT_TASK_DELETED_SUCCESS = 'EDIT_TASK_DELETED_SUCCESS',
+	EDIT_TASK_CANCELLED_SUCCESS = 'EDIT_TASK_CANCELLED_SUCCESS',
+	FILE_UPLOADED_SUCCESS = 'FILE_UPLOADED_SUCCESS',
+	GET_USER_FILES_SUCCESS = 'GET_USER_FILES_SUCCESS',
+	GET_FILE_SUCCESS = 'GET_FILE_SUCCESS',
+	FILE_ANALYZED_SUCCESS = 'FILE_ANALYZED_SUCCESS',
+	FILE_DELETED_SUCCESS = 'FILE_DELETED_SUCCESS',
+	GET_STORAGE_STATS_SUCCESS = 'GET_STORAGE_STATS_SUCCESS',
+	GENERATION_TASK_CREATED_SUCCESS = 'GENERATION_TASK_CREATED_SUCCESS',
+	GENERATION_TASK_RETRIEVED_SUCCESS = 'GENERATION_TASK_RETRIEVED_SUCCESS',
+	GENERATION_TASK_CANCELLED_SUCCESS = 'GENERATION_TASK_CANCELLED_SUCCESS',
+	GENERATION_TASK_DELETED_SUCCESS = 'GENERATION_TASK_DELETED_SUCCESS',
 }
 
 export const apiMessage: { [key in ApiMessageKey]: string } = {
+	[ApiMessageKey.GET_HELLO_SUCCESS]: 'Hello world!',
 	[ApiMessageKey.LOGIN_SUCCESS]: 'Logged in successfully.',
 	[ApiMessageKey.LOGOUT_SUCCESS]: 'Logout in successfully.',
 	[ApiMessageKey.CHANGE_PASSWORD_SUCCESS]: 'Changed password successfully.',
@@ -46,26 +79,93 @@ export const apiMessage: { [key in ApiMessageKey]: string } = {
 	[ApiMessageKey.GET_GOOGLE_URL_SUCCESS]: 'Get google url redirect success.',
 	[ApiMessageKey.CHAT_COMPLETED_SUCCESS]: 'Chat completed successfully.',
 	[ApiMessageKey.CONTENT_GENERATED_SUCCESS]: 'Content generated successfully.',
-	[ApiMessageKey.PROVIDERS_RETRIEVED_SUCCESS]: 'Providers retrieved successfully.',
-	[ApiMessageKey.PROVIDER_CAPABILITIES_RETRIEVED_SUCCESS]: 'Provider capabilities retrieved successfully.',
-	[ApiMessageKey.STATISTICS_RETRIEVED_SUCCESS]: 'Statistics retrieved successfully.',
-	[ApiMessageKey.PROVIDER_COMPARISON_COMPLETED]: 'Provider comparison completed.',
-	[ApiMessageKey.STREAMING_CAPABILITIES_AVAILABLE]: 'Streaming capabilities available.',
+	[ApiMessageKey.PROVIDERS_RETRIEVED_SUCCESS]:
+		'Providers retrieved successfully.',
+	[ApiMessageKey.PROVIDER_CAPABILITIES_RETRIEVED_SUCCESS]:
+		'Provider capabilities retrieved successfully.',
+	[ApiMessageKey.STATISTICS_RETRIEVED_SUCCESS]:
+		'Statistics retrieved successfully.',
+	[ApiMessageKey.PROVIDER_COMPARISON_COMPLETED]:
+		'Provider comparison completed.',
+	[ApiMessageKey.STREAMING_CAPABILITIES_AVAILABLE]:
+		'Streaming capabilities available.',
 	[ApiMessageKey.MODELS_RETRIEVED_SUCCESS]: 'Models retrieved successfully.',
 	[ApiMessageKey.API_KEY_CREATED_SUCCESS]: 'API key created successfully.',
-	[ApiMessageKey.API_KEYS_RETRIEVED_SUCCESS]: 'API keys retrieved successfully.',
-	[ApiMessageKey.API_KEY_DETAILS_RETRIEVED_SUCCESS]: 'API key details retrieved successfully.',
+	[ApiMessageKey.API_KEYS_RETRIEVED_SUCCESS]:
+		'API keys retrieved successfully.',
+	[ApiMessageKey.API_KEY_DETAILS_RETRIEVED_SUCCESS]:
+		'API key details retrieved successfully.',
 	[ApiMessageKey.API_KEY_UPDATED_SUCCESS]: 'API key updated successfully.',
 	[ApiMessageKey.API_KEY_DELETED_SUCCESS]: 'API key deleted successfully.',
-	[ApiMessageKey.API_KEY_REGENERATED_SUCCESS]: 'API key regenerated successfully.',
-	[ApiMessageKey.USAGE_STATISTICS_RETRIEVED_SUCCESS]: 'Usage statistics retrieved successfully.',
+	[ApiMessageKey.API_KEY_REGENERATED_SUCCESS]:
+		'API key regenerated successfully.',
+	[ApiMessageKey.USAGE_STATISTICS_RETRIEVED_SUCCESS]:
+		'Usage statistics retrieved successfully.',
 	[ApiMessageKey.API_KEY_ROTATED_SUCCESS]: 'API key rotated successfully.',
-	[ApiMessageKey.CHAT_SESSION_INITIALIZED_SUCCESS]: 'Chat session initialized successfully.',
-	[ApiMessageKey.AGENT_TASK_COMPLETED_SUCCESS]: 'Agent task completed successfully.',
-	[ApiMessageKey.USER_FLOW_STATUS_RETRIEVED_SUCCESS]: 'User flow status retrieved successfully.',
-	[ApiMessageKey.FLOW_SESSION_COMPLETED_SUCCESS]: 'Flow session completed successfully.',
-	[ApiMessageKey.ANALYTICS_RETRIEVED_SUCCESS]: 'Analytics retrieved successfully.',
-	[ApiMessageKey.USER_PROGRESS_RETRIEVED_SUCCESS]: 'User progress retrieved successfully.',
-	[ApiMessageKey.RECOMMENDATIONS_RETRIEVED_SUCCESS]: 'Recommendations retrieved successfully.',
-	[ApiMessageKey.BATCH_EXECUTION_COMPLETED_SUCCESS]: 'Batch execution completed successfully.'
+	[ApiMessageKey.CHAT_SESSION_INITIALIZED_SUCCESS]:
+		'Chat session initialized successfully.',
+	[ApiMessageKey.AGENT_TASK_COMPLETED_SUCCESS]:
+		'Agent task completed successfully.',
+	[ApiMessageKey.GET_ALL_AGENTS_SUCCESS]: 'Get all agents successfully.',
+	[ApiMessageKey.GET_AGENT_INFO_SUCCESS]: 'Get agent info successfully.',
+	[ApiMessageKey.USER_FLOW_STATUS_RETRIEVED_SUCCESS]:
+		'User flow status retrieved successfully.',
+	[ApiMessageKey.FLOW_SESSION_COMPLETED_SUCCESS]:
+		'Flow session completed successfully.',
+	[ApiMessageKey.ANALYTICS_RETRIEVED_SUCCESS]:
+		'Analytics retrieved successfully.',
+	[ApiMessageKey.USER_PROGRESS_RETRIEVED_SUCCESS]:
+		'User progress retrieved successfully.',
+	[ApiMessageKey.RECOMMENDATIONS_RETRIEVED_SUCCESS]:
+		'Recommendations retrieved successfully.',
+	[ApiMessageKey.BATCH_EXECUTION_COMPLETED_SUCCESS]:
+		'Batch execution completed successfully.',
+	[ApiMessageKey.GET_SESSION_LIST_SUCCESS]:
+		'Session list retrieved successfully.',
+	[ApiMessageKey.GET_SESSION_SUCCESS]: 'Session retrieved successfully.',
+	[ApiMessageKey.DELETE_SESSION_SUCCESS]:
+		'Session deleted and resources cleaned up successfully.',
+	[ApiMessageKey.GET_ALL_TOOLS_SUCCESS]: 'Get all tools successfully.',
+	[ApiMessageKey.GET_TOOL_INFO_SUCCESS]: 'Get tool info successfully.',
+	[ApiMessageKey.CHAT_HISTORY_RETRIEVED_SUCCESS]:
+		'Chat history retrieved successfully.',
+	[ApiMessageKey.CHAT_SESSION_STATS_RETRIEVED_SUCCESS]:
+		'Chat session stats retrieved successfully.',
+	[ApiMessageKey.CHAT_MESSAGE_DELETED_SUCCESS]:
+		'Chat message deleted successfully.',
+	[ApiMessageKey.CHAT_HISTORY_CLEARED_SUCCESS]:
+		'Chat history cleared successfully.',
+	[ApiMessageKey.DOCKER_EXECUTE_CODE_SUCCESS]:
+		'Docker execute code successfully.',
+	[ApiMessageKey.DOCKER_CREATE_CONTAINER_SUCCESS]:
+		'Docker create container successfully.',
+	[ApiMessageKey.DOCKER_LIST_CONTAINERS_SUCCESS]:
+		'Docker list containers successfully.',
+	[ApiMessageKey.DOCKER_STOP_CONTAINER_SUCCESS]:
+		'Docker stop container successfully.',
+	[ApiMessageKey.DOCKER_CLEANUP_SESSION_SUCCESS]:
+		'Docker cleanup session successfully.',
+	[ApiMessageKey.DOCKER_GET_CONTAINER_LOGS_SUCCESS]:
+		'Docker get container logs successfully.',
+	[ApiMessageKey.EDIT_TASK_CREATED_SUCCESS]: 'Edit task created successfully.',
+	[ApiMessageKey.EDIT_TASK_RETRIEVED_SUCCESS]:
+		'Edit task retrieved successfully.',
+	[ApiMessageKey.EDIT_TASK_DELETED_SUCCESS]: 'Edit task deleted successfully.',
+	[ApiMessageKey.EDIT_TASK_CANCELLED_SUCCESS]:
+		'Edit task cancelled successfully.',
+	[ApiMessageKey.FILE_UPLOADED_SUCCESS]: 'File uploaded successfully.',
+	[ApiMessageKey.GET_USER_FILES_SUCCESS]: 'User files retrieved successfully.',
+	[ApiMessageKey.GET_FILE_SUCCESS]: 'File retrieved successfully.',
+	[ApiMessageKey.FILE_ANALYZED_SUCCESS]: 'File analyzed successfully.',
+	[ApiMessageKey.FILE_DELETED_SUCCESS]: 'File deleted successfully.',
+	[ApiMessageKey.GET_STORAGE_STATS_SUCCESS]:
+		'Storage stats retrieved successfully.',
+	[ApiMessageKey.GENERATION_TASK_CREATED_SUCCESS]:
+		'Generation task created successfully.',
+	[ApiMessageKey.GENERATION_TASK_RETRIEVED_SUCCESS]:
+		'Generation task retrieved successfully.',
+	[ApiMessageKey.GENERATION_TASK_CANCELLED_SUCCESS]:
+		'Generation task cancelled successfully.',
+	[ApiMessageKey.GENERATION_TASK_DELETED_SUCCESS]:
+		'Generation task deleted successfully.',
 };

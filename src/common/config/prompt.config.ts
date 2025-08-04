@@ -1161,5 +1161,4 @@ export default {
 	agentLoopPrompt,
 	modulesPrompt,
 	defaultPrompt,
-	agentTools,
 };

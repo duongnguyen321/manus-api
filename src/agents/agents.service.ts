@@ -6,7 +6,12 @@ import {
 import { LangChainService } from './langchain.service';
 import { ToolsService } from './tools.service';
 import { ChatRequestDto, AgentListDto } from './dto/agents.dto';
-import { agentConfigs, getAgentByName } from '@/common/config/tools.config';
+import {
+	AgentConfig,
+	agentConfigs,
+	getAgentByName,
+	ToolCategory,
+} from '@/common/config/tools.config';
 
 @Injectable()
 export class AgentsService {
@@ -24,7 +29,19 @@ export class AgentsService {
 		}));
 	}
 
-	async getAgentInfo(agentName: string) {
+	async getAgentInfo(agentName: string): Promise<
+		AgentConfig & {
+			category: string;
+			availableTools: {
+				name: string;
+				description: string;
+				category: ToolCategory;
+				schema: any;
+				requiresAuth: boolean;
+				permissions: string[];
+			}[];
+		}
+	> {
 		const agent = getAgentByName(agentName);
 		if (!agent) {
 			throw new NotFoundException(`Agent ${agentName} does not exist`);
@@ -140,7 +157,11 @@ export class AgentsService {
 		}
 	}
 
-	async executeDataProcessingTool(agentName: string, toolName: string, parameters: any) {
+	async executeDataProcessingTool(
+		agentName: string,
+		toolName: string,
+		parameters: any
+	) {
 		const agent = getAgentByName(agentName);
 		if (!agent) {
 			throw new NotFoundException(`Agent ${agentName} does not exist`);
@@ -173,7 +194,11 @@ export class AgentsService {
 		}
 	}
 
-	async executeWebAutomationTool(agentName: string, toolName: string, parameters: any) {
+	async executeWebAutomationTool(
+		agentName: string,
+		toolName: string,
+		parameters: any
+	) {
 		const agent = getAgentByName(agentName);
 		if (!agent) {
 			throw new NotFoundException(`Agent ${agentName} does not exist`);
@@ -206,7 +231,11 @@ export class AgentsService {
 		}
 	}
 
-	async executeCodeExecutionTool(agentName: string, toolName: string, parameters: any) {
+	async executeCodeExecutionTool(
+		agentName: string,
+		toolName: string,
+		parameters: any
+	) {
 		const agent = getAgentByName(agentName);
 		if (!agent) {
 			throw new NotFoundException(`Agent ${agentName} does not exist`);
@@ -242,7 +271,7 @@ export class AgentsService {
 	// Enhanced agent suggestion with new categories
 	async getAgentsByCategory(category: string) {
 		const allAgents = await this.getAllAgents();
-		return allAgents.filter(agent => agent.category === category);
+		return allAgents.filter((agent) => agent.category === category);
 	}
 
 	async getAgentToolsByCategory(agentName: string, toolCategory?: string) {
@@ -256,36 +285,36 @@ export class AgentsService {
 			.filter((tool) => tool !== null);
 
 		if (toolCategory) {
-			return agentTools.filter(tool => tool.category === toolCategory);
+			return agentTools.filter((tool) => tool.category === toolCategory);
 		}
 
 		return agentTools;
 	}
 
 	private getAgentCategory(agentName: string): string {
-	const categoryMap = {
-		artistic_inspiration_agent: 'Art & Creativity',
-		career_planning_agent: 'Career Development',
-		customer_service_agent: 'Customer Service',
-		email_management_agent: 'Email Management',
-		learning_platform_agent: 'Online Learning',
-		stress_management_agent: 'Stress Management',
-		recommendation_agent: 'Content Recommendation',
-		video_editing_agent: 'Video Editing',
-		general_assistant_agent: 'Multi-purpose Assistant',
-		// New specialized agents
-		full_stack_developer_agent: 'Software Development',
-		security_analyst_agent: 'Security & Compliance',
-		devops_automation_agent: 'DevOps & Infrastructure',
-		research_assistant_agent: 'Research & Analysis',
-		data_scientist_agent: 'Data Science & Analytics',
-		content_creator_agent: 'Content Creation',
-		business_analyst_agent: 'Business Intelligence',
-		project_manager_agent: 'Project Management',
-	};
+		const categoryMap = {
+			artistic_inspiration_agent: 'Art & Creativity',
+			career_planning_agent: 'Career Development',
+			customer_service_agent: 'Customer Service',
+			email_management_agent: 'Email Management',
+			learning_platform_agent: 'Online Learning',
+			stress_management_agent: 'Stress Management',
+			recommendation_agent: 'Content Recommendation',
+			video_editing_agent: 'Video Editing',
+			general_assistant_agent: 'Multi-purpose Assistant',
+			// New specialized agents
+			full_stack_developer_agent: 'Software Development',
+			security_analyst_agent: 'Security & Compliance',
+			devops_automation_agent: 'DevOps & Infrastructure',
+			research_assistant_agent: 'Research & Analysis',
+			data_scientist_agent: 'Data Science & Analytics',
+			content_creator_agent: 'Content Creation',
+			business_analyst_agent: 'Business Intelligence',
+			project_manager_agent: 'Project Management',
+		};
 
-	return categoryMap[agentName] || 'Other';
-}
+		return categoryMap[agentName] || 'Other';
+	}
 
 	private generateConversationId(): string {
 		return `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -448,7 +477,12 @@ export class AgentsService {
 				'mental',
 				'wellness',
 			],
-			recommendation_agent: ['recommend', 'recommendation', 'suggest', 'suggest'],
+			recommendation_agent: [
+				'recommend',
+				'recommendation',
+				'suggest',
+				'suggest',
+			],
 			video_editing_agent: ['video', 'edit', 'edit', 'trim', 'effect'],
 			general_assistant_agent: [
 				'search',

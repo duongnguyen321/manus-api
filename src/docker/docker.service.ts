@@ -34,6 +34,15 @@ export class DockerService {
     sessionId?: string,
   ): Promise<DockerExecutionResult> {
     const startTime = Date.now();
+
+    // Check if Docker is available
+    try {
+      await this.docker.ping();
+    } catch (dockerError) {
+      this.logger.warn(`Docker not available: ${dockerError.message}. Using fallback execution.`);
+      return this.executeFallback(language, code, startTime);
+    }
+
     let container: Docker.Container | null = null;
 
     try {
@@ -79,29 +88,49 @@ export class DockerService {
       let output = '';
       let error = '';
 
-      // Parse Docker stream format
-      stream.on('data', (chunk: Buffer) => {
-        // Docker stream format: first 8 bytes are header
-        const header = chunk.readUInt8(0);
-        const data = chunk.slice(8).toString();
-        
-        if (header === 1) { // stdout
-          output += data;
-        } else if (header === 2) { // stderr  
-          error += data;
-        }
+      // Create a promise to handle stream data
+      const streamPromise = new Promise<void>((resolve) => {
+        stream.on('data', (chunk: Buffer) => {
+          // Check if this is a Docker multiplexed stream
+          if (chunk.length >= 8) {
+            const header = chunk.readUInt8(0);
+            const size = chunk.readUInt32BE(4);
+            
+            if (header === 1) { // stdout
+              output += chunk.slice(8, 8 + size).toString();
+            } else if (header === 2) { // stderr  
+              error += chunk.slice(8, 8 + size).toString();
+            }
+          } else {
+            // Non-multiplexed stream - treat as stdout
+            output += chunk.toString();
+          }
+        });
+
+        stream.on('end', () => {
+          resolve();
+        });
+
+        stream.on('error', (err) => {
+          this.logger.error(`Stream error: ${err.message}`);
+          resolve();
+        });
       });
 
       // Wait for container to finish with timeout
-      const waitResult = await Promise.race([
-        container.wait(),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Execution timeout')), 30000)
-        ),
+      const [waitResult] = await Promise.all([
+        Promise.race([
+          container.wait(),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Execution timeout')), 30000)
+          ),
+        ]),
+        streamPromise
       ]);
 
       const executionTime = Date.now() - startTime;
 
+      // If there's an error and no output, return the error
       if (error && !output) {
         return {
           success: false,
@@ -134,6 +163,73 @@ export class DockerService {
         success: false,
         error: error.message,
         executionTime: Date.now() - startTime,
+      };
+    }
+  }
+
+  private async executeFallback(
+    language: 'python' | 'nodejs' | 'bash',
+    code: string,
+    startTime: number,
+  ): Promise<DockerExecutionResult> {
+    this.logger.log(`Executing ${language} code using fallback (host execution)`);
+    
+    const { exec } = require('child_process');
+    const { promisify } = require('util');
+    const execAsync = promisify(exec);
+    
+    try {
+      let command: string;
+      
+      switch (language) {
+        case 'python':
+          // Execute Python code directly
+          command = `python3 -c "${code.replace(/"/g, '\\"')}"`;
+          break;
+        case 'nodejs':
+          // Execute Node.js code directly
+          command = `node -e "${code.replace(/"/g, '\\"')}"`;
+          break;
+        case 'bash':
+          // Execute bash commands directly
+          command = code;
+          break;
+        default:
+          throw new Error(`Unsupported language: ${language}`);
+      }
+
+      const { stdout, stderr } = await execAsync(command, {
+        timeout: 30000, // 30 second timeout
+        maxBuffer: 1024 * 1024, // 1MB buffer
+      });
+
+      const executionTime = Date.now() - startTime;
+
+      if (stderr && !stdout) {
+        return {
+          success: false,
+          error: stderr.trim(),
+          containerId: 'fallback-execution',
+          executionTime,
+        };
+      }
+
+      return {
+        success: true,
+        output: stdout.trim() || stderr.trim(),
+        containerId: 'fallback-execution',
+        executionTime,
+      };
+
+    } catch (error) {
+      const executionTime = Date.now() - startTime;
+      this.logger.error(`Fallback execution failed: ${error.message}`);
+      
+      return {
+        success: false,
+        error: error.message,
+        containerId: 'fallback-execution',
+        executionTime,
       };
     }
   }
@@ -203,21 +299,42 @@ export class DockerService {
       let output = '';
       let error = '';
 
-      stream.on('data', (chunk: Buffer) => {
-        const header = chunk.readUInt8(0);
-        const data = chunk.slice(8).toString();
-        
-        if (header === 1) { // stdout
-          output += data;
-        } else if (header === 2) { // stderr
-          error += data;
-        }
+      // Create a promise to handle stream data properly
+      const streamPromise = new Promise<void>((resolve) => {
+        stream.on('data', (chunk: Buffer) => {
+          // Check if this is a Docker multiplexed stream
+          if (chunk.length >= 8) {
+            const header = chunk.readUInt8(0);
+            const size = chunk.readUInt32BE(4);
+            
+            if (header === 1) { // stdout
+              output += chunk.slice(8, 8 + size).toString();
+            } else if (header === 2) { // stderr
+              error += chunk.slice(8, 8 + size).toString();
+            }
+          } else {
+            // Non-multiplexed stream - treat as stdout
+            output += chunk.toString();
+          }
+        });
+
+        stream.on('end', () => {
+          resolve();
+        });
+
+        stream.on('error', (err) => {
+          this.logger.error(`Exec stream error: ${err.message}`);
+          resolve();
+        });
       });
 
-      // Wait for execution to complete
-      await new Promise((resolve) => {
-        stream.on('end', resolve);
-      });
+      // Wait for execution to complete with timeout
+      await Promise.race([
+        streamPromise,
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Execution timeout')), 30000)
+        ),
+      ]);
 
       const executionTime = Date.now() - startTime;
 

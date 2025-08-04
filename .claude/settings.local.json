@@ -40,7 +40,12 @@
       "Bash(pkill:*)",
       "mcp__serena__insert_before_symbol",
       "Bash(grep:*)",
-      "Bash(true)"
+      "Bash(true)",
+      "Bash(bun:*)",
+      "Bash(cat:*)",
+      "Bash(git restore:*)",
+      "Bash(PORT=3001 bun run dev)",
+      "Bash(kill:*)"
     ],
     "deny": []
   }
