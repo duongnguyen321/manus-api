@@ -1,0 +1,2663 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// ===== EXISTING MODELS FROM ORIGINAL SCHEMA =====
+
+model User {
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
+  email        String        @unique()
+  password     String? // Password is optional because we can use OAuth
+  name         String?
+  avatar       String?       @default("https://picsum.photos/100")
+  refreshToken String?
+  role         RoleUser      @default(USER)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  accounts     Account[]
+  oldPasswords OldPassword[]
+  UserProfile  UserProfile?
+  AISession    AISession[]
+  
+  // New relations for AI API Platform
+  files            File[]            @relation("UserFiles")
+  apiKeys          ApiKey[]          @relation("UserApiKeys") 
+  chatSessions     ChatSession[]     @relation("UserChatSessions")
+  plugins          Plugin[]          @relation("UserPlugins")
+  analyticsEvents  AnalyticsEvent[]  @relation("UserAnalytics")
+  agentExecutions  AgentExecution[]  @relation("UserAgentExecutions")
+  flowEvents       FlowEvent[]       @relation("UserFlowEvents")
+  userProgress     UserProgress[]    @relation("UserProgress")
+  chatRooms        ChatRoom[]        @relation("UserChatRooms")
+}
+
+model OldPassword {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum RoleUser {
+  USER
+  ADMIN
+}
+
+model BlackListAccessToken {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  token     String   @unique
+  expiredAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Account {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  provider  Provider
+  email     String?
+  name      String?
+  avatar    String?  @default("https://picsum.photos/100")
+  sub       String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([provider, email])
+}
+
+enum Provider {
+  GOOGLE
+  EMAIL
+}
+
+model MailTracking {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  recipient String // Email recipient
+  subject   String // Subject of the email
+  status    MailStatus @default(SENT) // Email status: SENT or READ
+  type      MailType // Type of email
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+enum MailType {
+  WELCOME
+  CONTACT
+  RESET_PASSWORD
+  VERIFY_EMAIL
+}
+
+enum MailStatus {
+  SENT
+  READ
+}
+
+// ===== ARTISTIC INSPIRATION TOOL MODELS =====
+
+model Location {
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  country     String
+  city        String
+  exhibitions Exhibition[]
+  events      Event[]
+}
+
+model ArtMovement {
+  id        String @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  startYear Int
+  endYear   Int?
+}
+
+model Review {
+  id           String  @id @default(auto()) @map("_id") @db.ObjectId
+  artworkId    String  @db.ObjectId
+  artwork      Artwork @relation(fields: [artworkId], references: [id])
+  reviewerName String
+  rating       Int
+  comments     String
+}
+
+model ArtMarkup {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  artworkId   String  @db.ObjectId
+  artwork     Artwork @relation(fields: [artworkId], references: [id])
+  markupType  String
+  description String
+}
+
+model ArtworkTag {
+  id                  String               @id @default(auto()) @map("_id") @db.ObjectId
+  name                String
+  artworkTagsMappings ArtworkTagsMapping[]
+}
+
+model Collection {
+  id                 String              @id @default(auto()) @map("_id") @db.ObjectId
+  name               String
+  description        String
+  collectionArtworks CollectionArtwork[]
+}
+
+model Inspiration {
+  id                      String                   @id @default(auto()) @map("_id") @db.ObjectId
+  sourceId                String                   @db.ObjectId
+  targetId                String                   @db.ObjectId
+  description             String
+  inspirationTagsMappings InspirationTagsMapping[]
+}
+
+model AiModel {
+  id              String           @id @default(auto()) @map("_id") @db.ObjectId
+  name            String
+  version         String
+  description     String
+  recommendations Recommendation[]
+}
+
+model Recommendation {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String  @db.ObjectId
+  artworkId String  @db.ObjectId
+  artwork   Artwork @relation(fields: [artworkId], references: [id])
+  reason    String
+  aiModelId String  @db.ObjectId
+  aiModel   AiModel @relation(fields: [aiModelId], references: [id])
+}
+
+model ArtworkStyle {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  artworkId String  @db.ObjectId
+  artwork   Artwork @relation(fields: [artworkId], references: [id])
+  styleId   String  @db.ObjectId
+  style     Style   @relation(fields: [styleId], references: [id])
+}
+
+model Rating {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String  @db.ObjectId
+  artworkId   String  @db.ObjectId
+  artwork     Artwork @relation(fields: [artworkId], references: [id])
+  ratingValue Int
+}
+
+model CollectionArtwork {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  collectionId String     @db.ObjectId
+  collection   Collection @relation(fields: [collectionId], references: [id])
+  artworkId    String     @db.ObjectId
+  artwork      Artwork    @relation(fields: [artworkId], references: [id])
+}
+
+model ArtTool {
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  type        String
+  description String
+}
+
+model UserFavorite {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String  @db.ObjectId
+  artworkId String  @db.ObjectId
+  artwork   Artwork @relation(fields: [artworkId], references: [id])
+}
+
+model Style {
+  id              String         @id @default(auto()) @map("_id") @db.ObjectId
+  name            String
+  characteristics String
+  artworkStyles   ArtworkStyle[]
+}
+
+model Collab {
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  artistId1   String @db.ObjectId
+  artist1     Artist @relation("Artist1Collabs", fields: [artistId1], references: [id])
+  artistId2   String @db.ObjectId
+  artist2     Artist @relation("Artist2Collabs", fields: [artistId2], references: [id])
+  description String
+}
+
+model UserProfile {
+  id                 String           @id @default(auto()) @map("_id") @db.ObjectId
+  userId             String           @unique @db.ObjectId
+  user               User             @relation(fields: [userId], references: [id])
+  displayName        String?
+  bio                String?
+  avatar             String?
+  timezone           String?
+  language           String?          @default("en")
+  preferences        Json? // UI preferences, API settings, etc.
+  subscription       SubscriptionTier @default(FREE)
+  subscriptionExpiry DateTime?
+  apiUsage           Json? // Track API usage for rate limiting
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+}
+
+model ArtGenre {
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  description   String
+  artistsGenres ArtistsGenre[]
+}
+
+model ArtistsGenre {
+  id       String   @id @default(auto()) @map("_id") @db.ObjectId
+  artistId String   @db.ObjectId
+  artist   Artist   @relation(fields: [artistId], references: [id])
+  genreId  String   @db.ObjectId
+  artGenre ArtGenre @relation(fields: [genreId], references: [id])
+}
+
+model Exhibition {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  title      String
+  locationId String   @db.ObjectId
+  location   Location @relation(fields: [locationId], references: [id])
+  startDate  DateTime
+  endDate    DateTime
+}
+
+model ArtworkMedium {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  artworkId String  @db.ObjectId
+  artwork   Artwork @relation(fields: [artworkId], references: [id])
+  mediumId  String  @db.ObjectId
+  medium    Medium  @relation(fields: [mediumId], references: [id])
+}
+
+model InspirationSource {
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  type        String
+  description String
+}
+
+model ArtworkTagsMapping {
+  id         String     @id @default(auto()) @map("_id") @db.ObjectId
+  artworkId  String     @db.ObjectId
+  artwork    Artwork    @relation(fields: [artworkId], references: [id])
+  tagId      String     @db.ObjectId
+  artworkTag ArtworkTag @relation(fields: [tagId], references: [id])
+}
+
+model Artist {
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  bio           String
+  birthDate     DateTime
+  country       String
+  artworks      Artwork[]
+  collabs1      Collab[]       @relation("Artist1Collabs")
+  collabs2      Collab[]       @relation("Artist2Collabs")
+  artistsGenres ArtistsGenre[]
+  workshops     Workshop[]
+}
+
+model Comment {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  artworkId   String   @db.ObjectId
+  artwork     Artwork  @relation(fields: [artworkId], references: [id])
+  commentText String
+  commentDate DateTime
+}
+
+model Medium {
+  id             String          @id @default(auto()) @map("_id") @db.ObjectId
+  name           String
+  description    String
+  artworkMediums ArtworkMedium[]
+}
+
+model InspirationsTag {
+  id                      String                   @id @default(auto()) @map("_id") @db.ObjectId
+  name                    String
+  inspirationTagsMappings InspirationTagsMapping[]
+}
+
+model Workshop {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  title        String
+  instructorId String   @db.ObjectId
+  instructor   Artist   @relation(fields: [instructorId], references: [id])
+  description  String
+  date         DateTime
+}
+
+model InspirationTagsMapping {
+  id             String          @id @default(auto()) @map("_id") @db.ObjectId
+  inspirationId  String          @db.ObjectId
+  inspiration    Inspiration     @relation(fields: [inspirationId], references: [id])
+  tagId          String          @db.ObjectId
+  inspirationTag InspirationsTag @relation(fields: [tagId], references: [id])
+}
+
+model Event {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String
+  date        DateTime
+  locationId  String   @db.ObjectId
+  location    Location @relation(fields: [locationId], references: [id])
+}
+
+model Artwork {
+  id                  String               @id @default(auto()) @map("_id") @db.ObjectId
+  title               String
+  artistId            String               @db.ObjectId
+  artist              Artist               @relation(fields: [artistId], references: [id])
+  creationYear        Int
+  medium              String
+  reviews             Review[]
+  artMarkups          ArtMarkup[]
+  recommendations     Recommendation[]
+  artworkStyles       ArtworkStyle[]
+  ratings             Rating[]
+  collectionArtworks  CollectionArtwork[]
+  userFavorites       UserFavorite[]
+  artworkMediums      ArtworkMedium[]
+  artworkTagsMappings ArtworkTagsMapping[]
+  comments            Comment[]
+}
+
+model Color {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  name     String
+  hexValue String
+  rgbValue String
+}
+
+model Technique {
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String
+}
+
+// ===== CAREER PATHWAY PLANNING MODELS =====
+
+model CareerUser {
+  id                      String                   @id @default(auto()) @map("_id") @db.ObjectId
+  fullName                String
+  email                   String                   @unique
+  passwordHash            String
+  age                     Int?
+  gender                  CareerUserGender?
+  location                String?
+  educationLevel          String?
+  experienceLevel         String?
+  createdAt               DateTime                 @default(now())
+  userCourses             UserCourse[]
+  careerProgress          CareerProgress[]
+  userSkills              UserSkill[]
+  userCareerPreferences   UserCareerPreference[]
+  aiRecommendations       AIRecommendation[]
+  userJobApplications     UserJobApplication[]
+  userMentorships         UserMentorship[]
+  aiProgressTracking      AIProgressTracking[]
+  aiPredictiveAnalytics   AIPredictiveAnalytic[]
+  userLearningResources   UserLearningResource[]
+  aiChatbotInteractions   AIChatbotInteraction[]
+  careerPaths             CareerPath[]
+  userAssessments         UserAssessment[]
+  userCertifications      UserCertification[]
+  notifications           CareerNotification[]
+  userFeedbacks           UserFeedback[]
+  userCareerPaths         UserCareerPath[]
+  userResourceEngagements UserResourceEngagement[]
+}
+
+enum CareerUserGender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+model UserCourse {
+  id               String                     @id @default(auto()) @map("_id") @db.ObjectId
+  userId           String                     @db.ObjectId
+  user             CareerUser                 @relation(fields: [userId], references: [id])
+  courseId         String                     @db.ObjectId
+  course           Course                     @relation(fields: [courseId], references: [id])
+  completionStatus UserCourseCompletionStatus
+  completionDate   DateTime?
+}
+
+enum UserCourseCompletionStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+model AIChatbotInteraction {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String     @db.ObjectId
+  user      CareerUser @relation(fields: [userId], references: [id])
+  message   String
+  response  String
+  createdAt DateTime   @default(now())
+}
+
+model CareerProgress {
+  id                 String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId             String     @db.ObjectId
+  user               CareerUser @relation(fields: [userId], references: [id])
+  careerId           String     @db.ObjectId
+  career             Career     @relation(fields: [careerId], references: [id])
+  progressPercentage Float
+  lastUpdated        DateTime   @default(now())
+}
+
+model LearningResource {
+  id                      String                   @id @default(auto()) @map("_id") @db.ObjectId
+  title                   String
+  url                     String
+  category                String
+  skillId                 String                   @db.ObjectId
+  skill                   Skill                    @relation(fields: [skillId], references: [id])
+  userLearningResources   UserLearningResource[]
+  userResourceEngagements UserResourceEngagement[]
+}
+
+model Certification {
+  id                 String              @id @default(auto()) @map("_id") @db.ObjectId
+  certName           String
+  provider           String
+  validityYears      Int
+  userCertifications UserCertification[]
+}
+
+model UserSkill {
+  id               String                    @id @default(auto()) @map("_id") @db.ObjectId
+  userId           String                    @db.ObjectId
+  user             CareerUser                @relation(fields: [userId], references: [id])
+  skillId          String                    @db.ObjectId
+  skill            Skill                     @relation(fields: [skillId], references: [id])
+  proficiencyLevel UserSkillProficiencyLevel
+}
+
+enum UserSkillProficiencyLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+model AIRecommendation {
+  id                  String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId              String     @db.ObjectId
+  user                CareerUser @relation(fields: [userId], references: [id])
+  careerId            String     @db.ObjectId
+  career              Career     @relation(fields: [careerId], references: [id])
+  recommendationScore Float
+  createdAt           DateTime   @default(now())
+}
+
+model UserCareerPreference {
+  id               String                            @id @default(auto()) @map("_id") @db.ObjectId
+  userId           String                            @db.ObjectId
+  user             CareerUser                        @relation(fields: [userId], references: [id])
+  careerId         String                            @db.ObjectId
+  career           Career                            @relation(fields: [careerId], references: [id])
+  interestLevel    UserCareerPreferenceInterestLevel
+  suitabilityScore Float
+}
+
+enum UserCareerPreferenceInterestLevel {
+  LOW
+  MEDIUM
+  HIGH
+  VERY_HIGH
+}
+
+model AIProgressTracking {
+  id                String                         @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String                         @db.ObjectId
+  user              CareerUser                     @relation(fields: [userId], references: [id])
+  recommendedAction String
+  actionStatus      AIProgressTrackingActionStatus
+}
+
+enum AIProgressTrackingActionStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model UserLearningResource {
+  id         String                       @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String                       @db.ObjectId
+  user       CareerUser                   @relation(fields: [userId], references: [id])
+  resourceId String                       @db.ObjectId
+  resource   LearningResource             @relation(fields: [resourceId], references: [id])
+  progress   UserLearningResourceProgress
+}
+
+enum UserLearningResourceProgress {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+model UserJobApplication {
+  id                String                   @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String                   @db.ObjectId
+  user              CareerUser               @relation(fields: [userId], references: [id])
+  jobId             String                   @db.ObjectId
+  job               JobOpportunity           @relation(fields: [jobId], references: [id])
+  applicationStatus UserJobApplicationStatus
+  appliedDate       DateTime
+}
+
+enum UserJobApplicationStatus {
+  APPLIED
+  UNDER_REVIEW
+  INTERVIEWED
+  REJECTED
+  ACCEPTED
+}
+
+model UserMentorship {
+  id              String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String     @db.ObjectId
+  user            CareerUser @relation(fields: [userId], references: [id])
+  mentorId        String     @db.ObjectId
+  mentor          Mentor     @relation(fields: [mentorId], references: [id])
+  mentorshipStart DateTime
+  mentorshipEnd   DateTime?
+}
+
+model CareerNotification {
+  id        String                   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String                   @db.ObjectId
+  user      CareerUser               @relation(fields: [userId], references: [id])
+  message   String
+  status    CareerNotificationStatus
+  createdAt DateTime                 @default(now())
+}
+
+enum CareerNotificationStatus {
+  UNREAD
+  READ
+}
+
+model Assessment {
+  id              String           @id @default(auto()) @map("_id") @db.ObjectId
+  title           String
+  description     String
+  createdAt       DateTime         @default(now())
+  userAssessments UserAssessment[]
+}
+
+model UserCareerPath {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String     @db.ObjectId
+  user         CareerUser @relation(fields: [userId], references: [id])
+  careerPathId String     @db.ObjectId
+  careerPath   CareerPath @relation(fields: [careerPathId], references: [id])
+  startDate    DateTime
+}
+
+model UserAssessment {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String     @db.ObjectId
+  user         CareerUser @relation(fields: [userId], references: [id])
+  assessmentId String     @db.ObjectId
+  assessment   Assessment @relation(fields: [assessmentId], references: [id])
+  score        Float
+  completedAt  DateTime
+}
+
+model Course {
+  id            String           @id @default(auto()) @map("_id") @db.ObjectId
+  title         String
+  provider      String
+  durationWeeks Int
+  difficulty    CourseDifficulty
+  careerId      String           @db.ObjectId
+  career        Career           @relation(fields: [careerId], references: [id])
+  userCourses   UserCourse[]
+}
+
+enum CourseDifficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+model Mentor {
+  id              String           @id @default(auto()) @map("_id") @db.ObjectId
+  fullName        String
+  expertise       String
+  industry        String
+  yearsExperience Int
+  userMentorships UserMentorship[]
+}
+
+model Career {
+  id                    String                 @id @default(auto()) @map("_id") @db.ObjectId
+  careerName            String                 @unique
+  industry              String
+  averageSalary         Float
+  growthRate            Float
+  description           String
+  careerProgress        CareerProgress[]
+  aiRecommendations     AIRecommendation[]
+  userCareerPreferences UserCareerPreference[]
+  courses               Course[]
+  careerSkills          CareerSkill[]
+  jobOpportunities      JobOpportunity[]
+  careerPaths           CareerPath[]
+}
+
+model Skill {
+  id                String             @id @default(auto()) @map("_id") @db.ObjectId
+  skillName         String             @unique
+  category          String
+  userSkills        UserSkill[]
+  learningResources LearningResource[]
+  careerSkills      CareerSkill[]
+}
+
+model UserCertification {
+  id             String        @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String        @db.ObjectId
+  user           CareerUser    @relation(fields: [userId], references: [id])
+  certId         String        @db.ObjectId
+  certification  Certification @relation(fields: [certId], references: [id])
+  obtainedDate   DateTime
+  expirationDate DateTime?
+}
+
+model UserResourceEngagement {
+  id             String           @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String           @db.ObjectId
+  user           CareerUser       @relation(fields: [userId], references: [id])
+  resourceId     String           @db.ObjectId
+  resource       LearningResource @relation(fields: [resourceId], references: [id])
+  engagementDate DateTime
+  feedback       String?
+}
+
+model JobOpportunity {
+  id                  String               @id @default(auto()) @map("_id") @db.ObjectId
+  title               String
+  company             String
+  location            String
+  careerId            String               @db.ObjectId
+  career              Career               @relation(fields: [careerId], references: [id])
+  userJobApplications UserJobApplication[]
+}
+
+model UserFeedback {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String     @db.ObjectId
+  user         CareerUser @relation(fields: [userId], references: [id])
+  feedbackText String
+  rating       Int
+  createdAt    DateTime   @default(now())
+}
+
+model CareerPath {
+  id              String           @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String           @db.ObjectId
+  user            CareerUser       @relation(fields: [userId], references: [id])
+  careerId        String           @db.ObjectId
+  career          Career           @relation(fields: [careerId], references: [id])
+  pathStatus      CareerPathStatus
+  createdAt       DateTime         @default(now())
+  userCareerPaths UserCareerPath[]
+}
+
+enum CareerPathStatus {
+  ACTIVE
+  COMPLETED
+  PAUSED
+  CANCELLED
+}
+
+model AIPredictiveAnalytic {
+  id              String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String     @db.ObjectId
+  user            CareerUser @relation(fields: [userId], references: [id])
+  predictedCareer String
+  confidenceScore Float
+}
+
+model CareerSkill {
+  id              String                     @id @default(auto()) @map("_id") @db.ObjectId
+  careerId        String                     @db.ObjectId
+  career          Career                     @relation(fields: [careerId], references: [id])
+  skillId         String                     @db.ObjectId
+  skill           Skill                      @relation(fields: [skillId], references: [id])
+  importanceLevel CareerSkillImportanceLevel
+}
+
+enum CareerSkillImportanceLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+// ===== CUSTOMER SERVICE CHATBOT MODELS =====
+
+model TrainingData {
+  id              String          @id @default(auto()) @map("_id") @db.ObjectId
+  intent          String
+  exampleQuestion String
+  exampleResponse String
+  createdAt       DateTime        @default(now())
+  intentsEntities IntentsEntity[]
+}
+
+model UserSearchHistory {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  searchQuery String
+  searchedAt  DateTime @default(now())
+}
+
+model Message {
+  id               String            @id @default(auto()) @map("_id") @db.ObjectId
+  conversationId   String            @db.ObjectId
+  conversation     Conversation      @relation(fields: [conversationId], references: [id])
+  sender           MessageSender
+  messageText      String
+  sentAt           DateTime          @default(now())
+  chatbotResponses ChatbotResponse[]
+}
+
+enum MessageSender {
+  USER
+  BOT
+}
+
+model SecurityQuestion {
+  id           String @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String @db.ObjectId
+  questionText String
+  answerHash   String
+}
+
+model Notification {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId           String   @db.ObjectId
+  type             String   // Notification type (info, warning, error, success)
+  notificationText String
+  isRead           Boolean  @default(false)
+  sentAt           DateTime @default(now())
+}
+
+model APILog {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  apiKeyId        String   @db.ObjectId
+  apiKey          APIKey   @relation(fields: [apiKeyId], references: [id])
+  endpoint        String
+  requestPayload  String
+  responsePayload String
+  loggedAt        DateTime @default(now())
+}
+
+model IntentsEntity {
+  id           String       @id @default(auto()) @map("_id") @db.ObjectId
+  trainingId   String       @db.ObjectId
+  trainingData TrainingData @relation(fields: [trainingId], references: [id])
+  entityId     String       @db.ObjectId
+  entity       Entity       @relation(fields: [entityId], references: [id])
+}
+
+model UserProfileBot {
+  id                 String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId             String  @db.ObjectId
+  languagePreference String
+  timeZone           String
+  optInMarketing     Boolean @default(false)
+}
+
+model KnowledgeBaseCategory {
+  id                      String                   @id @default(auto()) @map("_id") @db.ObjectId
+  name                    String
+  parentCategoryId        String?                  @db.ObjectId
+  parentCategory          KnowledgeBaseCategory?   @relation("CategoryHierarchy", fields: [parentCategoryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  childCategories         KnowledgeBaseCategory[]  @relation("CategoryHierarchy")
+  articleCategoryMappings ArticleCategoryMapping[]
+}
+
+model ScheduledTask {
+  id                 String              @id @default(auto()) @map("_id") @db.ObjectId
+  taskName           String
+  scheduleExpression String
+  status             ScheduledTaskStatus
+  lastRunAt          DateTime?
+  taskLogs           TaskLog[]
+}
+
+enum ScheduledTaskStatus {
+  ACTIVE
+  INACTIVE
+  COMPLETED
+  FAILED
+}
+
+model ChatbotResponse {
+  id              String              @id @default(auto()) @map("_id") @db.ObjectId
+  messageId       String              @db.ObjectId
+  message         Message             @relation(fields: [messageId], references: [id])
+  botResponseText String
+  responseType    ChatbotResponseType
+  confidenceScore Float
+  feedbacks       Feedback[]
+}
+
+enum ChatbotResponseType {
+  TEXT
+  QUICK_REPLY
+  CARD
+  LIST
+}
+
+model ErrorLog {
+  id           String       @id @default(auto()) @map("_id") @db.ObjectId
+  errorMessage String
+  errorType    ErrorLogType
+  loggedAt     DateTime     @default(now())
+}
+
+enum ErrorLogType {
+  SYSTEM
+  USER_INPUT
+  API
+  DATABASE
+}
+
+model APIKey {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  key       String   @unique
+  ownerName String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  apiLogs   APILog[]
+}
+
+model Entity {
+  id              String          @id @default(auto()) @map("_id") @db.ObjectId
+  name            String
+  type            String
+  valuePattern    String
+  intentsEntities IntentsEntity[]
+}
+
+model TaskLog {
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  taskId        String        @db.ObjectId
+  scheduledTask ScheduledTask @relation(fields: [taskId], references: [id])
+  logMessage    String
+  loggedAt      DateTime      @default(now())
+}
+
+model ConversationAnalytic {
+  id                  String       @id @default(auto()) @map("_id") @db.ObjectId
+  conversationId      String       @db.ObjectId
+  conversation        Conversation @relation(fields: [conversationId], references: [id])
+  responseTimeAvg     Float
+  userEngagementScore Float
+}
+
+model AuditLog {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  action      String
+  performedAt DateTime @default(now())
+}
+
+model Feedback {
+  id              String          @id @default(auto()) @map("_id") @db.ObjectId
+  responseId      String          @db.ObjectId
+  chatbotResponse ChatbotResponse @relation(fields: [responseId], references: [id])
+  userId          String          @db.ObjectId
+  rating          Int
+  comment         String?
+  submittedAt     DateTime        @default(now())
+}
+
+model BotProfile {
+  id                  String               @id @default(auto()) @map("_id") @db.ObjectId
+  botName             String
+  version             String
+  createdAt           DateTime             @default(now())
+  botTrainingSessions BotTrainingSession[]
+}
+
+model UserAuth {
+  id             String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String    @db.ObjectId
+  passwordHash   String
+  lastLogin      DateTime?
+  failedAttempts Int       @default(0)
+}
+
+model KnowledgeBaseArticle {
+  id                      String                   @id @default(auto()) @map("_id") @db.ObjectId
+  title                   String
+  content                 String
+  tags                    String
+  createdAt               DateTime                 @default(now())
+  articleCategoryMappings ArticleCategoryMapping[]
+}
+
+model ChatUser {
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
+  userName      String
+  email         String         @unique
+  phoneNumber   String?
+  createdAt     DateTime       @default(now())
+  conversations Conversation[]
+}
+
+model Conversation {
+  id                    String                 @id @default(auto()) @map("_id") @db.ObjectId
+  userId                String                 @db.ObjectId
+  user                  ChatUser               @relation(fields: [userId], references: [id])
+  startedAt             DateTime               @default(now())
+  endedAt               DateTime?
+  status                ConversationStatus
+  messages              Message[]
+  conversationAnalytics ConversationAnalytic[]
+}
+
+enum ConversationStatus {
+  ACTIVE
+  ENDED
+  PAUSED
+}
+
+model BotTrainingSession {
+  id         String                   @id @default(auto()) @map("_id") @db.ObjectId
+  botId      String                   @db.ObjectId
+  botProfile BotProfile               @relation(fields: [botId], references: [id])
+  startedAt  DateTime                 @default(now())
+  endedAt    DateTime?
+  status     BotTrainingSessionStatus
+}
+
+enum BotTrainingSessionStatus {
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
+
+model SystemSetting {
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  key   String @unique
+  value String
+}
+
+model ArticleCategoryMapping {
+  id                    String                @id @default(auto()) @map("_id") @db.ObjectId
+  articleId             String                @db.ObjectId
+  knowledgeBaseArticle  KnowledgeBaseArticle  @relation(fields: [articleId], references: [id])
+  categoryId            String                @db.ObjectId
+  knowledgeBaseCategory KnowledgeBaseCategory @relation(fields: [categoryId], references: [id])
+}
+
+model UserPreference {
+  id              String @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String @db.ObjectId
+  preferenceKey   String
+  preferenceValue String
+}
+
+// ===== EMAIL MANAGEMENT TOOL MODELS =====
+
+model EmailUserPreference {
+  id               String    @id @default(auto()) @map("_id") @db.ObjectId
+  preferenceUserId String    @db.ObjectId
+  emailUser        EmailUser @relation(fields: [preferenceUserId], references: [id])
+  preferenceKey    String
+  preferenceValue  String
+}
+
+model Template {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  templateUserId  String    @db.ObjectId
+  emailUser       EmailUser @relation(fields: [templateUserId], references: [id])
+  templateName    String
+  templateContent String
+}
+
+model GroupContact {
+  id                  String               @id @default(auto()) @map("_id") @db.ObjectId
+  groupName           String
+  groupDescription    String?
+  groupMemberMappings GroupMemberMapping[]
+}
+
+model CalendarEvent {
+  id               String           @id @default(auto()) @map("_id") @db.ObjectId
+  eventUserId      String           @db.ObjectId
+  emailUser        EmailUser        @relation(fields: [eventUserId], references: [id])
+  eventTitle       String
+  eventDescription String?
+  eventStart       DateTime
+  eventEnd         DateTime
+  eventAttendants  EventAttendant[]
+}
+
+model EmailFilter {
+  id             String      @id @default(auto()) @map("_id") @db.ObjectId
+  filterUserId   String      @db.ObjectId
+  emailUser      EmailUser   @relation(fields: [filterUserId], references: [id])
+  filterName     String
+  filterCriteria String
+  emailRules     EmailRule[]
+}
+
+model EmailAttachment {
+  id                  String       @id @default(auto()) @map("_id") @db.ObjectId
+  attachmentMessageId String       @db.ObjectId
+  emailMessage        EmailMessage @relation(fields: [attachmentMessageId], references: [id])
+  attachmentFileName  String
+  attachmentFileType  String
+  attachmentFileSize  Int
+}
+
+model ArchivedEmail {
+  id               String       @id @default(auto()) @map("_id") @db.ObjectId
+  archiveUserId    String       @db.ObjectId
+  emailUser        EmailUser    @relation(fields: [archiveUserId], references: [id])
+  archiveMessageId String       @db.ObjectId
+  emailMessage     EmailMessage @relation(fields: [archiveMessageId], references: [id])
+  archiveDate      DateTime     @default(now())
+}
+
+model EmailTag {
+  id                String       @id @default(auto()) @map("_id") @db.ObjectId
+  emailTagMessageId String       @db.ObjectId
+  emailMessage      EmailMessage @relation(fields: [emailTagMessageId], references: [id])
+  tagId             String       @db.ObjectId
+  tag               Tag          @relation(fields: [tagId], references: [id])
+}
+
+model UserRole {
+  id               String            @id @default(auto()) @map("_id") @db.ObjectId
+  roleName         String
+  roleDescription  String?
+  userRoleMappings UserRoleMapping[]
+}
+
+model EmailNotification {
+  id                    String    @id @default(auto()) @map("_id") @db.ObjectId
+  notificationUserId    String    @db.ObjectId
+  emailUser             EmailUser @relation(fields: [notificationUserId], references: [id])
+  notificationMessage   String
+  notificationTimestamp DateTime  @default(now())
+}
+
+model EmailQuarantine {
+  id                  String       @id @default(auto()) @map("_id") @db.ObjectId
+  quarantineMessageId String       @db.ObjectId
+  emailMessage        EmailMessage @relation(fields: [quarantineMessageId], references: [id])
+  quarantineReason    String
+  quarantineDate      DateTime     @default(now())
+}
+
+model Tag {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  tagUserId String     @db.ObjectId
+  emailUser EmailUser  @relation(fields: [tagUserId], references: [id])
+  tagName   String
+  emailTags EmailTag[]
+}
+
+model FolderMessage {
+  id           String       @id @default(auto()) @map("_id") @db.ObjectId
+  folderId     String       @db.ObjectId
+  folder       Folder       @relation(fields: [folderId], references: [id])
+  messageId    String       @db.ObjectId
+  emailMessage EmailMessage @relation(fields: [messageId], references: [id])
+}
+
+model BackupSetting {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  backupUserId    String    @db.ObjectId
+  emailUser       EmailUser @relation(fields: [backupUserId], references: [id])
+  backupFrequency String
+  backupType      String
+}
+
+model UserRoleMapping {
+  id                String    @id @default(auto()) @map("_id") @db.ObjectId
+  roleMappingUserId String    @db.ObjectId
+  emailUser         EmailUser @relation(fields: [roleMappingUserId], references: [id])
+  roleMappingRoleId String    @db.ObjectId
+  userRole          UserRole  @relation(fields: [roleMappingRoleId], references: [id])
+}
+
+model EmailAccount {
+  id                  String         @id @default(auto()) @map("_id") @db.ObjectId
+  accountUserId       String         @db.ObjectId
+  emailUser           EmailUser      @relation(fields: [accountUserId], references: [id])
+  accountProvider     String
+  accountEmailAddress String
+  accountPassword     String
+  emailMessages       EmailMessage[]
+  draftMessages       DraftMessage[]
+}
+
+model EmailMessage {
+  id               String            @id @default(auto()) @map("_id") @db.ObjectId
+  messageAccountId String            @db.ObjectId
+  emailAccount     EmailAccount      @relation(fields: [messageAccountId], references: [id])
+  messageSubject   String
+  messageBody      String
+  messageDate      DateTime
+  emailAttachments EmailAttachment[]
+  archivedEmails   ArchivedEmail[]
+  emailTags        EmailTag[]
+  folderMessages   FolderMessage[]
+  emailQuarantines EmailQuarantine[]
+  importantEmails  ImportantEmail[]
+}
+
+model Contact {
+  id                  String               @id @default(auto()) @map("_id") @db.ObjectId
+  contactUserId       String               @db.ObjectId
+  emailUser           EmailUser            @relation(fields: [contactUserId], references: [id])
+  contactName         String
+  contactEmail        String
+  groupMemberMappings GroupMemberMapping[]
+}
+
+model EmailRule {
+  id           String      @id @default(auto()) @map("_id") @db.ObjectId
+  ruleFilterId String      @db.ObjectId
+  emailFilter  EmailFilter @relation(fields: [ruleFilterId], references: [id])
+  ruleAction   String
+}
+
+model LogEntry {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  logUserId    String    @db.ObjectId
+  emailUser    EmailUser @relation(fields: [logUserId], references: [id])
+  logAction    String
+  logTimestamp DateTime  @default(now())
+}
+
+model SpamFilter {
+  id                 String    @id @default(auto()) @map("_id") @db.ObjectId
+  spamFilterUserId   String    @db.ObjectId
+  emailUser          EmailUser @relation(fields: [spamFilterUserId], references: [id])
+  spamFilterCriteria String
+}
+
+model EmailAPIKey {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  apiKeyUserId    String    @db.ObjectId
+  emailUser       EmailUser @relation(fields: [apiKeyUserId], references: [id])
+  apiKeyValue     String
+  keyCreationDate DateTime  @default(now())
+}
+
+model EventAttendant {
+  id              String        @id @default(auto()) @map("_id") @db.ObjectId
+  eventId         String        @db.ObjectId
+  calendarEvent   CalendarEvent @relation(fields: [eventId], references: [id])
+  attendantUserId String        @db.ObjectId
+  emailUser       EmailUser     @relation(fields: [attendantUserId], references: [id])
+  attendantStatus String
+}
+
+model GroupMemberMapping {
+  id           String       @id @default(auto()) @map("_id") @db.ObjectId
+  groupId      String       @db.ObjectId
+  groupContact GroupContact @relation(fields: [groupId], references: [id])
+  contactId    String       @db.ObjectId
+  contact      Contact      @relation(fields: [contactId], references: [id])
+}
+
+model DraftMessage {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  draftAccountId String       @db.ObjectId
+  emailAccount   EmailAccount @relation(fields: [draftAccountId], references: [id])
+  draftSubject   String?
+  draftBody      String?
+}
+
+model ExternalIntegration {
+  id                 String    @id @default(auto()) @map("_id") @db.ObjectId
+  integrationUserId  String    @db.ObjectId
+  emailUser          EmailUser @relation(fields: [integrationUserId], references: [id])
+  integrationName    String
+  integrationDetails String
+}
+
+model Folder {
+  id             String          @id @default(auto()) @map("_id") @db.ObjectId
+  folderUserId   String          @db.ObjectId
+  emailUser      EmailUser       @relation(fields: [folderUserId], references: [id])
+  folderName     String
+  folderMessages FolderMessage[]
+}
+
+model ImportantEmail {
+  id                 String       @id @default(auto()) @map("_id") @db.ObjectId
+  importantMessageId String       @db.ObjectId
+  emailMessage       EmailMessage @relation(fields: [importantMessageId], references: [id])
+  importantUserId    String       @db.ObjectId
+  emailUser          EmailUser    @relation(fields: [importantUserId], references: [id])
+}
+
+model DeviceSession {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  sessionUserId String    @db.ObjectId
+  emailUser     EmailUser @relation(fields: [sessionUserId], references: [id])
+  deviceName    String
+  sessionStart  DateTime  @default(now())
+  sessionEnd    DateTime?
+}
+
+model EmailUser {
+  id                   String                @id @default(auto()) @map("_id") @db.ObjectId
+  userName             String
+  userEmail            String
+  userPassword         String
+  emailUserPreferences EmailUserPreference[]
+  templates            Template[]
+  calendarEvents       CalendarEvent[]
+  emailFilters         EmailFilter[]
+  archivedEmails       ArchivedEmail[]
+  emailNotifications   EmailNotification[]
+  tags                 Tag[]
+  backupSettings       BackupSetting[]
+  userRoleMappings     UserRoleMapping[]
+  emailAccounts        EmailAccount[]
+  contacts             Contact[]
+  logEntries           LogEntry[]
+  spamFilters          SpamFilter[]
+  emailAPIKeys         EmailAPIKey[]
+  eventAttendants      EventAttendant[]
+  externalIntegrations ExternalIntegration[]
+  folders              Folder[]
+  importantEmails      ImportantEmail[]
+  deviceSessions       DeviceSession[]
+}
+
+// ===== LEARNING PLATFORM MODELS =====
+
+model LearningPath {
+  id              String       @id @default(auto()) @map("_id") @db.ObjectId
+  pathTitle       String
+  pathDescription String
+  creatorUserId   String       @db.ObjectId
+  creator         LearningUser @relation(fields: [creatorUserId], references: [id])
+  pathCourses     PathCourse[]
+}
+
+model ChallengeSubmission {
+  id                String       @id @default(auto()) @map("_id") @db.ObjectId
+  challengeId       String       @db.ObjectId
+  userId            String       @db.ObjectId
+  user              LearningUser @relation(fields: [userId], references: [id])
+  submissionContent String
+  submissionDate    DateTime     @default(now())
+}
+
+model LessonProgress {
+  id        String       @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String       @db.ObjectId
+  user      LearningUser @relation(fields: [userId], references: [id])
+  lessonId  String       @db.ObjectId
+  lesson    Lesson       @relation(fields: [lessonId], references: [id])
+  completed Boolean      @default(false)
+}
+
+model Quiz {
+  id               String            @id @default(auto()) @map("_id") @db.ObjectId
+  courseId         String            @db.ObjectId
+  course           LearningCourse    @relation(fields: [courseId], references: [id])
+  title            String
+  questions        Question[]
+  userQuizAttempts UserQuizAttempt[]
+}
+
+model LearningFeedback {
+  id           String         @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String         @db.ObjectId
+  user         LearningUser   @relation(fields: [userId], references: [id])
+  courseId     String         @db.ObjectId
+  course       LearningCourse @relation(fields: [courseId], references: [id])
+  feedbackText String
+  rating       Int
+  feedbackDate DateTime       @default(now())
+}
+
+model Answer {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  questionId String   @db.ObjectId
+  question   Question @relation(fields: [questionId], references: [id])
+  answerText String
+  isCorrect  Boolean  @default(false)
+}
+
+model LearningUser {
+  id                        String                     @id @default(auto()) @map("_id") @db.ObjectId
+  name                      String
+  email                     String                     @unique
+  passwordHash              String
+  role                      LearningUserRole
+  createdAt                 DateTime                   @default(now())
+  learningPaths             LearningPath[]
+  challengeSubmissions      ChallengeSubmission[]
+  lessonProgress            LessonProgress[]
+  learningFeedbacks         LearningFeedback[]
+  courseProgress            CourseProgress[]
+  certificates              Certificate[]
+  aiRecommendationsLearning AIRecommendationLearning[]
+  sentMessages              LearningMessage[]          @relation("SentMessages")
+  receivedMessages          LearningMessage[]          @relation("ReceivedMessages")
+  userSubscriptions         UserSubscription[]
+  userProfiles              LearningUserProfile[]
+  userQuizAttempts          UserQuizAttempt[]
+  achievements              Achievement[]
+  aiPerformanceReports      AIPerformanceReport[]
+  transactions              Transaction[]
+  discussions               Discussion[]
+  comments                  LearningComment[]
+  userAnalytics             UserAnalytic[]
+  instructorCourses         LearningCourse[]           @relation("InstructorCourses")
+}
+
+enum LearningUserRole {
+  STUDENT
+  INSTRUCTOR
+  ADMIN
+}
+
+model Lesson {
+  id             String           @id @default(auto()) @map("_id") @db.ObjectId
+  moduleId       String           @db.ObjectId
+  module         LearningModule   @relation(fields: [moduleId], references: [id])
+  title          String
+  content        String?
+  videoUrl       String?
+  lessonProgress LessonProgress[]
+}
+
+model CourseProgress {
+  id                   String         @id @default(auto()) @map("_id") @db.ObjectId
+  userId               String         @db.ObjectId
+  user                 LearningUser   @relation(fields: [userId], references: [id])
+  courseId             String         @db.ObjectId
+  course               LearningCourse @relation(fields: [courseId], references: [id])
+  completionPercentage Float
+  lastAccessed         DateTime       @default(now())
+}
+
+model Certificate {
+  id        String         @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String         @db.ObjectId
+  user      LearningUser   @relation(fields: [userId], references: [id])
+  courseId  String         @db.ObjectId
+  course    LearningCourse @relation(fields: [courseId], references: [id])
+  issueDate DateTime       @default(now())
+}
+
+model AIRecommendationLearning {
+  id                 String          @id @default(auto()) @map("_id") @db.ObjectId
+  modelId            String          @db.ObjectId
+  aiModel            AIModelLearning @relation(fields: [modelId], references: [id])
+  userId             String          @db.ObjectId
+  user               LearningUser    @relation(fields: [userId], references: [id])
+  recommendedCourses String
+  recommendationDate DateTime        @default(now())
+}
+
+model LearningMessage {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  fromUserId     String       @db.ObjectId
+  fromUser       LearningUser @relation("SentMessages", fields: [fromUserId], references: [id])
+  toUserId       String       @db.ObjectId
+  toUser         LearningUser @relation("ReceivedMessages", fields: [toUserId], references: [id])
+  messageContent String
+  sentDate       DateTime     @default(now())
+}
+
+model SubscriptionPlan {
+  id                String             @id @default(auto()) @map("_id") @db.ObjectId
+  name              String
+  price             Float
+  durationDays      Int
+  userSubscriptions UserSubscription[]
+}
+
+model LearningUserProfile {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String       @db.ObjectId
+  user           LearningUser @relation(fields: [userId], references: [id])
+  bio            String?
+  profilePicture String?
+  interests      String?
+}
+
+model Question {
+  id           String       @id @default(auto()) @map("_id") @db.ObjectId
+  quizId       String       @db.ObjectId
+  quiz         Quiz         @relation(fields: [quizId], references: [id])
+  questionText String
+  questionType QuestionType
+  answers      Answer[]
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  SHORT_ANSWER
+  ESSAY
+}
+
+model UserSubscription {
+  id        String           @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String           @db.ObjectId
+  user      LearningUser     @relation(fields: [userId], references: [id])
+  planId    String           @db.ObjectId
+  plan      SubscriptionPlan @relation(fields: [planId], references: [id])
+  startDate DateTime         @default(now())
+  endDate   DateTime
+}
+
+model Achievement {
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String       @db.ObjectId
+  user        LearningUser @relation(fields: [userId], references: [id])
+  title       String
+  description String?
+  achievedAt  DateTime     @default(now())
+}
+
+model UserQuizAttempt {
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String       @db.ObjectId
+  user        LearningUser @relation(fields: [userId], references: [id])
+  quizId      String       @db.ObjectId
+  quiz        Quiz         @relation(fields: [quizId], references: [id])
+  score       Float
+  attemptDate DateTime     @default(now())
+}
+
+model AIPerformanceReport {
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String       @db.ObjectId
+  user        LearningUser @relation(fields: [userId], references: [id])
+  insights    String
+  generatedAt DateTime     @default(now())
+}
+
+model AIModelLearning {
+  id                        String                     @id @default(auto()) @map("_id") @db.ObjectId
+  modelName                 String
+  modelDescription          String
+  deploymentDate            DateTime                   @default(now())
+  aiRecommendationsLearning AIRecommendationLearning[]
+}
+
+model Transaction {
+  id              String       @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String       @db.ObjectId
+  user            LearningUser @relation(fields: [userId], references: [id])
+  amount          Float
+  paymentMethod   String?
+  transactionDate DateTime     @default(now())
+}
+
+model Discussion {
+  id               String            @id @default(auto()) @map("_id") @db.ObjectId
+  courseId         String            @db.ObjectId
+  course           LearningCourse    @relation(fields: [courseId], references: [id])
+  userId           String            @db.ObjectId
+  user             LearningUser      @relation(fields: [userId], references: [id])
+  topic            String
+  createdAt        DateTime          @default(now())
+  learningComments LearningComment[]
+}
+
+model AIRecommendationCourse {
+  id              String         @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String         @db.ObjectId
+  courseId        String         @db.ObjectId
+  course          LearningCourse @relation(fields: [courseId], references: [id])
+  confidenceScore Float
+  reason          String?
+}
+
+model PathCourse {
+  id           String         @id @default(auto()) @map("_id") @db.ObjectId
+  pathId       String         @db.ObjectId
+  learningPath LearningPath   @relation(fields: [pathId], references: [id])
+  courseId     String         @db.ObjectId
+  course       LearningCourse @relation(fields: [courseId], references: [id])
+}
+
+model LearningCourse {
+  id                      String                   @id @default(auto()) @map("_id") @db.ObjectId
+  title                   String
+  description             String?
+  instructorId            String                   @db.ObjectId
+  instructor              LearningUser             @relation("InstructorCourses", fields: [instructorId], references: [id])
+  createdAt               DateTime                 @default(now())
+  modules                 LearningModule[]
+  quizzes                 Quiz[]
+  learningFeedbacks       LearningFeedback[]
+  courseProgress          CourseProgress[]
+  certificates            Certificate[]
+  discussions             Discussion[]
+  aiRecommendationsCourse AIRecommendationCourse[]
+  pathCourses             PathCourse[]
+}
+
+model LearningModule {
+  id          String         @id @default(auto()) @map("_id") @db.ObjectId
+  courseId    String         @db.ObjectId
+  course      LearningCourse @relation(fields: [courseId], references: [id])
+  title       String
+  description String?
+  lessons     Lesson[]
+}
+
+model LearningComment {
+  id           String       @id @default(auto()) @map("_id") @db.ObjectId
+  discussionId String       @db.ObjectId
+  discussion   Discussion   @relation(fields: [discussionId], references: [id])
+  userId       String       @db.ObjectId
+  user         LearningUser @relation(fields: [userId], references: [id])
+  commentText  String
+  createdAt    DateTime     @default(now())
+}
+
+model UserAnalytic {
+  id              String       @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String       @db.ObjectId
+  user            LearningUser @relation(fields: [userId], references: [id])
+  engagementScore Float
+  lastActive      DateTime     @default(now())
+}
+
+// ===== STRESS MANAGEMENT MODELS =====
+
+model StressUserReward {
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String       @db.ObjectId
+  user        StressUser   @relation(fields: [userId], references: [id])
+  rewardId    String       @db.ObjectId
+  reward      StressReward @relation(fields: [rewardId], references: [id])
+  awardedDate DateTime
+}
+
+model NutritionLog {
+  id            String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String     @db.ObjectId
+  user          StressUser @relation(fields: [userId], references: [id])
+  mealType      String
+  nutritionDate DateTime
+  calories      Int
+  protein       Int
+  carbs         Int
+  fats          Int
+}
+
+model StressQuestionnaire {
+  id                    String                 @id @default(auto()) @map("_id") @db.ObjectId
+  title                 String
+  description           String
+  userQuestionResponses UserQuestionResponse[]
+}
+
+model MeditationSession {
+  id              String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String     @db.ObjectId
+  user            StressUser @relation(fields: [userId], references: [id])
+  meditationType  String
+  meditationDate  DateTime
+  durationMinutes Int
+  notes           String?
+}
+
+model UserQuestionResponse {
+  id              String              @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String              @db.ObjectId
+  user            StressUser          @relation(fields: [userId], references: [id])
+  questionnaireId String              @db.ObjectId
+  questionnaire   StressQuestionnaire @relation(fields: [questionnaireId], references: [id])
+  questionText    String
+  responseText    String
+  responseDate    DateTime
+}
+
+model Journal {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String     @db.ObjectId
+  user        StressUser @relation(fields: [userId], references: [id])
+  entryDate   DateTime
+  mood        String
+  journalText String
+}
+
+model ExerciseLog {
+  id             String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String     @db.ObjectId
+  user           StressUser @relation(fields: [userId], references: [id])
+  exerciseType   String
+  duration       Int
+  caloriesBurned Int
+  exerciseDate   DateTime
+}
+
+model EducationalResource {
+  id                            String                         @id @default(auto()) @map("_id") @db.ObjectId
+  title                         String
+  resourceType                  String
+  resourceUrl                   String
+  description                   String
+  userResourceEngagementsStress UserResourceEngagementStress[]
+}
+
+model PersonalGoal {
+  id                String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String     @db.ObjectId
+  user              StressUser @relation(fields: [userId], references: [id])
+  goalDescription   String
+  targetDate        DateTime
+  achievementStatus String
+}
+
+model UserResourceEngagementStress {
+  id                 String              @id @default(auto()) @map("_id") @db.ObjectId
+  userId             String              @db.ObjectId
+  user               StressUser          @relation(fields: [userId], references: [id])
+  resourceId         String              @db.ObjectId
+  resource           EducationalResource @relation(fields: [resourceId], references: [id])
+  engagementDate     DateTime
+  engagementDuration Int
+}
+
+model SocialConnection {
+  id               String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId           String     @db.ObjectId
+  user             StressUser @relation(fields: [userId], references: [id])
+  connectionUserId String     @db.ObjectId
+  connectionType   String
+  connectionStatus String
+}
+
+model TherapyAppointment {
+  id              String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String     @db.ObjectId
+  user            StressUser @relation(fields: [userId], references: [id])
+  therapistName   String
+  appointmentDate DateTime
+  sessionNotes    String?
+}
+
+model UserSupportGroupMembership {
+  id               String           @id @default(auto()) @map("_id") @db.ObjectId
+  userId           String           @db.ObjectId
+  user             StressUser       @relation(fields: [userId], references: [id])
+  groupId          String           @db.ObjectId
+  peerSupportGroup PeerSupportGroup @relation(fields: [groupId], references: [id])
+  joinDate         DateTime
+}
+
+model StressUserProfile {
+  id                String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String     @db.ObjectId
+  user              StressUser @relation(fields: [userId], references: [id])
+  bio               String?
+  profilePictureUrl String?
+  occupation        String?
+}
+
+model StressTherapist {
+  id                       String                    @id @default(auto()) @map("_id") @db.ObjectId
+  name                     String
+  specialization           String
+  contactEmail             String
+  contactPhone             String
+  userTherapistAssignments UserTherapistAssignment[]
+}
+
+model MonitorPhysicalActivity {
+  id             String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String     @db.ObjectId
+  user           StressUser @relation(fields: [userId], references: [id])
+  activityType   String
+  startTime      DateTime
+  endTime        DateTime
+  stepsCount     Int
+  distance       Float
+  caloriesBurned Int
+}
+
+model StressUserPreference {
+  id              String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String     @db.ObjectId
+  user            StressUser @relation(fields: [userId], references: [id])
+  preferenceName  String
+  preferenceValue String
+}
+
+model StressSession {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String     @db.ObjectId
+  user        StressUser @relation(fields: [userId], references: [id])
+  sessionDate DateTime
+  sessionType String
+  duration    Int
+  notes       String?
+}
+
+model StressNotification {
+  id               String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId           String     @db.ObjectId
+  user             StressUser @relation(fields: [userId], references: [id])
+  message          String
+  notificationDate DateTime
+  readStatus       String
+}
+
+model StressActivity {
+  id             String         @id @default(auto()) @map("_id") @db.ObjectId
+  name           String
+  description    String
+  activityType   String
+  userActivities UserActivity[]
+}
+
+model UserActivity {
+  id             String         @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String         @db.ObjectId
+  user           StressUser     @relation(fields: [userId], references: [id])
+  activityId     String         @db.ObjectId
+  activity       StressActivity @relation(fields: [activityId], references: [id])
+  startTime      DateTime
+  endTime        DateTime
+  intensityLevel Int
+  notes          String?
+}
+
+model SleepPattern {
+  id            String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String     @db.ObjectId
+  user          StressUser @relation(fields: [userId], references: [id])
+  sleepDate     DateTime
+  sleepDuration Int
+  sleepQuality  Int
+}
+
+model StressTechnique {
+  id             String          @id @default(auto()) @map("_id") @db.ObjectId
+  name           String
+  description    String
+  userTechniques UserTechnique[]
+}
+
+model MindfulnessPractice {
+  id                      String                   @id @default(auto()) @map("_id") @db.ObjectId
+  name                    String
+  description             String
+  userMindfulnessSessions UserMindfulnessSession[]
+}
+
+model StressUser {
+  id                            String                         @id @default(auto()) @map("_id") @db.ObjectId
+  username                      String
+  email                         String
+  passwordHash                  String
+  dateOfBirth                   DateTime
+  gender                        String
+  stressUserRewards             StressUserReward[]
+  nutritionLogs                 NutritionLog[]
+  meditationSessions            MeditationSession[]
+  userQuestionResponses         UserQuestionResponse[]
+  journals                      Journal[]
+  exerciseLogs                  ExerciseLog[]
+  personalGoals                 PersonalGoal[]
+  userResourceEngagementsStress UserResourceEngagementStress[]
+  socialConnections             SocialConnection[]
+  therapyAppointments           TherapyAppointment[]
+  userSupportGroupMemberships   UserSupportGroupMembership[]
+  stressUserProfiles            StressUserProfile[]
+  monitorPhysicalActivities     MonitorPhysicalActivity[]
+  stressUserPreferences         StressUserPreference[]
+  stressSessions                StressSession[]
+  stressNotifications           StressNotification[]
+  userActivities                UserActivity[]
+  sleepPatterns                 SleepPattern[]
+  userMindfulnessSessions       UserMindfulnessSession[]
+  supportContacts               SupportContact[]
+  userTherapistAssignments      UserTherapistAssignment[]
+  stressFeedbacks               StressFeedback[]
+  stressLogs                    StressLog[]
+  userTechniques                UserTechnique[]
+}
+
+model UserMindfulnessSession {
+  id              String              @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String              @db.ObjectId
+  user            StressUser          @relation(fields: [userId], references: [id])
+  practiceId      String              @db.ObjectId
+  practice        MindfulnessPractice @relation(fields: [practiceId], references: [id])
+  sessionDate     DateTime
+  durationMinutes Int
+  notes           String?
+}
+
+model StressReward {
+  id                String             @id @default(auto()) @map("_id") @db.ObjectId
+  rewardName        String
+  rewardPoints      Int
+  rewardDescription String
+  stressUserRewards StressUserReward[]
+}
+
+model SupportContact {
+  id                  String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId              String     @db.ObjectId
+  user                StressUser @relation(fields: [userId], references: [id])
+  contactName         String
+  contactRelationship String
+  contactPhone        String
+  contactEmail        String
+}
+
+model UserTherapistAssignment {
+  id          String          @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String          @db.ObjectId
+  user        StressUser      @relation(fields: [userId], references: [id])
+  therapistId String          @db.ObjectId
+  therapist   StressTherapist @relation(fields: [therapistId], references: [id])
+  startDate   DateTime
+  endDate     DateTime?
+}
+
+model PeerSupportGroup {
+  id                          String                       @id @default(auto()) @map("_id") @db.ObjectId
+  groupName                   String
+  description                 String
+  userSupportGroupMemberships UserSupportGroupMembership[]
+}
+
+model StressFeedback {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String     @db.ObjectId
+  user         StressUser @relation(fields: [userId], references: [id])
+  feedbackText String
+  feedbackDate DateTime
+  ratings      Int
+}
+
+model StressLog {
+  id                String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String     @db.ObjectId
+  user              StressUser @relation(fields: [userId], references: [id])
+  stressLevel       Int
+  logDate           DateTime
+  physicalSymptoms  String?
+  emotionalSymptoms String?
+}
+
+model UserTechnique {
+  id             String          @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String          @db.ObjectId
+  user           StressUser      @relation(fields: [userId], references: [id])
+  techniqueId    String          @db.ObjectId
+  technique      StressTechnique @relation(fields: [techniqueId], references: [id])
+  dateAssigned   DateTime
+  status         String
+  efficacyRating Int?
+}
+
+// ===== RECOMMENDATION APP MODELS =====
+
+model RecommendationTransaction {
+  id                String                      @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String                      @db.ObjectId
+  user              RecommendationUser          @relation(fields: [userId], references: [id])
+  transactionAmount Float
+  transactionDate   DateTime
+  paymentMethodId   String                      @db.ObjectId
+  paymentMethod     RecommendationPaymentMethod @relation(fields: [paymentMethodId], references: [id])
+}
+
+model Admin {
+  id            String @id @default(auto()) @map("_id") @db.ObjectId
+  adminName     String
+  adminEmail    String
+  adminPassword String
+}
+
+model ContentView {
+  id        String                @id @default(auto()) @map("_id") @db.ObjectId
+  contentId String                @db.ObjectId
+  content   RecommendationContent @relation(fields: [contentId], references: [id])
+  userId    String                @db.ObjectId
+  user      RecommendationUser    @relation(fields: [userId], references: [id])
+  viewDate  DateTime
+}
+
+model RecommendationRating {
+  id          String                @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String                @db.ObjectId
+  user        RecommendationUser    @relation(fields: [userId], references: [id])
+  contentId   String                @db.ObjectId
+  content     RecommendationContent @relation(fields: [contentId], references: [id])
+  ratingValue Float
+  ratingDate  DateTime
+}
+
+model ContentShare {
+  id        String                @id @default(auto()) @map("_id") @db.ObjectId
+  contentId String                @db.ObjectId
+  content   RecommendationContent @relation(fields: [contentId], references: [id])
+  userId    String                @db.ObjectId
+  user      RecommendationUser    @relation(fields: [userId], references: [id])
+  shareDate DateTime
+  platform  String
+}
+
+model AdClick {
+  id            String                      @id @default(auto()) @map("_id") @db.ObjectId
+  adId          String                      @db.ObjectId
+  advertisement RecommendationAdvertisement @relation(fields: [adId], references: [id])
+  userId        String                      @db.ObjectId
+  user          RecommendationUser          @relation(fields: [userId], references: [id])
+  clickDate     DateTime
+}
+
+model RecommendationUser {
+  id                           String                        @id @default(auto()) @map("_id") @db.ObjectId
+  userName                     String
+  userEmail                    String
+  userPassword                 String
+  userDateOfBirth              DateTime
+  contentViews                 ContentView[]
+  recommendationRatings        RecommendationRating[]
+  contentShares                ContentShare[]
+  adClicks                     AdClick[]
+  recommendationLikes          RecommendationLike[]
+  recommendationPlaylists      RecommendationPlaylist[]
+  userFollowsFollower          UserFollow[]                  @relation("FollowerRelation")
+  userFollowsFollowing         UserFollow[]                  @relation("FollowingRelation")
+  recommendationUserProfiles   RecommendationUserProfile[]
+  recommendationNotifications  RecommendationNotification[]
+  contentReports               ContentReport[]
+  recommendationPaymentMethods RecommendationPaymentMethod[]
+  recommendationTransactions   RecommendationTransaction[]
+  issuesReports                IssuesReport[]
+  contentRecommendations       ContentRecommendation[]
+  apiTokens                    ApiToken[]
+  userActivitiesRecommendation UserActivityRecommendation[]
+  recommendationComments       RecommendationComment[]
+  recommendationSessions       RecommendationSession[]
+  recommendationMessages       RecommendationMessage[]       @relation("SenderRelation")
+  receivedMessages             RecommendationMessage[]       @relation("ReceiverRelation")
+  recommendationSubscriptions  RecommendationSubscription[]
+  adImpressions                AdImpression[]
+}
+
+model RecommendationContentTag {
+  id        String                @id @default(auto()) @map("_id") @db.ObjectId
+  contentId String                @db.ObjectId
+  content   RecommendationContent @relation(fields: [contentId], references: [id])
+  tagId     String                @db.ObjectId
+  tag       RecommendationTag     @relation(fields: [tagId], references: [id])
+}
+
+model RecommendationLike {
+  id        String                @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String                @db.ObjectId
+  user      RecommendationUser    @relation(fields: [userId], references: [id])
+  contentId String                @db.ObjectId
+  content   RecommendationContent @relation(fields: [contentId], references: [id])
+  likeDate  DateTime
+}
+
+model RecommendationPlaylist {
+  id                  String             @id @default(auto()) @map("_id") @db.ObjectId
+  userId              String             @db.ObjectId
+  user                RecommendationUser @relation(fields: [userId], references: [id])
+  playlistName        String
+  playlistDescription String?
+  creationDate        DateTime
+  playlistContents    PlaylistContent[]
+}
+
+model UserFollow {
+  id          String             @id @default(auto()) @map("_id") @db.ObjectId
+  followerId  String             @db.ObjectId
+  follower    RecommendationUser @relation("FollowerRelation", fields: [followerId], references: [id])
+  followingId String             @db.ObjectId
+  following   RecommendationUser @relation("FollowingRelation", fields: [followingId], references: [id])
+  followDate  DateTime
+}
+
+model RecommendationUserProfile {
+  id                  String             @id @default(auto()) @map("_id") @db.ObjectId
+  userId              String             @db.ObjectId
+  user                RecommendationUser @relation(fields: [userId], references: [id])
+  profilePicture      String?
+  bio                 String?
+  profileCreationDate DateTime
+}
+
+model RecommendationNotification {
+  id               String             @id @default(auto()) @map("_id") @db.ObjectId
+  userId           String             @db.ObjectId
+  user             RecommendationUser @relation(fields: [userId], references: [id])
+  notificationText String
+  notificationDate DateTime
+}
+
+model PlaylistContent {
+  id           String                 @id @default(auto()) @map("_id") @db.ObjectId
+  playlistId   String                 @db.ObjectId
+  playlist     RecommendationPlaylist @relation(fields: [playlistId], references: [id])
+  contentId    String                 @db.ObjectId
+  content      RecommendationContent  @relation(fields: [contentId], references: [id])
+  additionDate DateTime
+}
+
+model AdImpression {
+  id             String                      @id @default(auto()) @map("_id") @db.ObjectId
+  adId           String                      @db.ObjectId
+  advertisement  RecommendationAdvertisement @relation(fields: [adId], references: [id])
+  userId         String                      @db.ObjectId
+  user           RecommendationUser          @relation(fields: [userId], references: [id])
+  impressionDate DateTime
+}
+
+model ContentReport {
+  id           String                @id @default(auto()) @map("_id") @db.ObjectId
+  contentId    String                @db.ObjectId
+  content      RecommendationContent @relation(fields: [contentId], references: [id])
+  userId       String                @db.ObjectId
+  user         RecommendationUser    @relation(fields: [userId], references: [id])
+  reportReason String
+  reportDate   DateTime
+  reportStatus String
+}
+
+model RecommendationContent {
+  id                        String                     @id @default(auto()) @map("_id") @db.ObjectId
+  contentTitle              String
+  contentDescription        String?
+  contentType               String
+  contentCreationDate       DateTime
+  contentCreatorId          String                     @db.ObjectId
+  contentCreator            ContentCreator             @relation(fields: [contentCreatorId], references: [id])
+  recommendationLikes       RecommendationLike[]
+  recommendationContentTags RecommendationContentTag[]
+  contentViews              ContentView[]
+  contentShares             ContentShare[]
+  contentReports            ContentReport[]
+  recommendationComments    RecommendationComment[]
+  contentRecommendations    ContentRecommendation[]
+  playlistContents          PlaylistContent[]
+  contentAnalytics          ContentAnalytic[]
+  recommendationRatings     RecommendationRating[]
+  contentCategories         ContentCategory[]
+}
+
+model RecommendationPaymentMethod {
+  id                         String                      @id @default(auto()) @map("_id") @db.ObjectId
+  userId                     String                      @db.ObjectId
+  user                       RecommendationUser          @relation(fields: [userId], references: [id])
+  paymentType                String
+  cardNumber                 String
+  expirationDate             DateTime
+  holderName                 String
+  recommendationTransactions RecommendationTransaction[]
+}
+
+model IssuesReport {
+  id               String             @id @default(auto()) @map("_id") @db.ObjectId
+  userId           String             @db.ObjectId
+  user             RecommendationUser @relation(fields: [userId], references: [id])
+  issueDescription String
+  reportDate       DateTime
+  issueStatus      String
+}
+
+model ContentRecommendation {
+  id                 String                @id @default(auto()) @map("_id") @db.ObjectId
+  userId             String                @db.ObjectId
+  user               RecommendationUser    @relation(fields: [userId], references: [id])
+  contentId          String                @db.ObjectId
+  content            RecommendationContent @relation(fields: [contentId], references: [id])
+  recommendationDate DateTime
+}
+
+model ContentAnalytic {
+  id              String                @id @default(auto()) @map("_id") @db.ObjectId
+  contentId       String                @db.ObjectId
+  content         RecommendationContent @relation(fields: [contentId], references: [id])
+  views           Int
+  likes           Int
+  shares          Int
+  comments        Int
+  durationWatched Int
+}
+
+model RecommendationTag {
+  id                        String                     @id @default(auto()) @map("_id") @db.ObjectId
+  tagName                   String
+  recommendationContentTags RecommendationContentTag[]
+}
+
+model ApiToken {
+  id             String             @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String             @db.ObjectId
+  user           RecommendationUser @relation(fields: [userId], references: [id])
+  token          String
+  expirationDate DateTime
+}
+
+model UserActivityRecommendation {
+  id                  String             @id @default(auto()) @map("_id") @db.ObjectId
+  userId              String             @db.ObjectId
+  user                RecommendationUser @relation(fields: [userId], references: [id])
+  activityDescription String
+  activityTimestamp   DateTime
+}
+
+model RecommendationAdvertisement {
+  id             String         @id @default(auto()) @map("_id") @db.ObjectId
+  adTitle        String
+  adDescription  String?
+  adLink         String
+  adCreationDate DateTime
+  adImpressions  AdImpression[]
+  adClicks       AdClick[]
+}
+
+model RecommendationCategory {
+  id                String            @id @default(auto()) @map("_id") @db.ObjectId
+  categoryName      String
+  contentCategories ContentCategory[]
+}
+
+model ContentCategory {
+  id         String                 @id @default(auto()) @map("_id") @db.ObjectId
+  contentId  String                 @db.ObjectId
+  content    RecommendationContent  @relation(fields: [contentId], references: [id])
+  categoryId String                 @db.ObjectId
+  category   RecommendationCategory @relation(fields: [categoryId], references: [id])
+}
+
+model RecommendationComment {
+  id          String                @id @default(auto()) @map("_id") @db.ObjectId
+  contentId   String                @db.ObjectId
+  content     RecommendationContent @relation(fields: [contentId], references: [id])
+  userId      String                @db.ObjectId
+  user        RecommendationUser    @relation(fields: [userId], references: [id])
+  commentText String
+  commentDate DateTime
+}
+
+model RecommendationSession {
+  id           String             @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String             @db.ObjectId
+  user         RecommendationUser @relation(fields: [userId], references: [id])
+  sessionStart DateTime
+  sessionEnd   DateTime?
+  sessionToken String
+}
+
+model ContentCreator {
+  id                          String                       @id @default(auto()) @map("_id") @db.ObjectId
+  creatorName                 String
+  creatorEmail                String
+  creatorBio                  String?
+  recommendationContents      RecommendationContent[]
+  recommendationSubscriptions RecommendationSubscription[]
+}
+
+model RecommendationMessage {
+  id               String             @id @default(auto()) @map("_id") @db.ObjectId
+  senderId         String             @db.ObjectId
+  sender           RecommendationUser @relation("SenderRelation", fields: [senderId], references: [id])
+  receiverId       String             @db.ObjectId
+  receiver         RecommendationUser @relation("ReceiverRelation", fields: [receiverId], references: [id])
+  messageText      String
+  messageTimestamp DateTime
+}
+
+model RecommendationSubscription {
+  id               String             @id @default(auto()) @map("_id") @db.ObjectId
+  userId           String             @db.ObjectId
+  user             RecommendationUser @relation(fields: [userId], references: [id])
+  creatorId        String             @db.ObjectId
+  creator          ContentCreator     @relation(fields: [creatorId], references: [id])
+  subscriptionDate DateTime
+}
+
+// ===== SESSION MANAGEMENT & QUEUE MODELS =====
+
+model AISession {
+  id             String        @id @default(auto()) @map("_id") @db.ObjectId
+  sessionId      String        @unique
+  userId         String?       @db.ObjectId
+  user           User?         @relation(fields: [userId], references: [id])
+  status         SessionStatus @default(ACTIVE)
+  metadata       Json? // Store session configuration, browser context, etc.
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  expiresAt      DateTime?
+  lastAccessedAt DateTime      @default(now())
+
+  // Relations
+  chatMessages    ChatMessage[]
+  generationTasks GenerationTask[]
+  editTasks       EditTask[]
+  flowEvents      FlowEvent[]
+  browserContexts BrowserContext[]
+  queueJobs       QueueJob[]
+  sessionLogs     SessionLog[]
+}
+
+enum SessionStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  EXPIRED
+  ERROR
+}
+
+model ChatMessage {
+  id        String      @id @default(auto()) @map("_id") @db.ObjectId
+  sessionId String      @db.ObjectId
+  session   AISession   @relation(fields: [sessionId], references: [id])
+  roomId    String?     // Optional room ID for WebSocket grouping
+  role      MessageRole
+  content   String
+  metadata  Json? // Store tool calls, attachments, etc.
+  timestamp DateTime    @default(now())
+
+  // Background processing
+  isProcessed Boolean   @default(false)
+  queueJobId  String?   @db.ObjectId
+  queueJob    QueueJob? @relation(fields: [queueJobId], references: [id])
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+  TOOL
+}
+
+model GenerationTask {
+  id          String         @id @default(auto()) @map("_id") @db.ObjectId
+  sessionId   String         @db.ObjectId
+  session     AISession      @relation(fields: [sessionId], references: [id])
+  taskType    GenerationType
+  prompt      String
+  parameters  Json? // Model params, temperature, etc.
+  result      String?
+  status      TaskStatus     @default(PENDING)
+  createdAt   DateTime       @default(now())
+  completedAt DateTime?
+
+  // Background processing
+  queueJobId String?   @db.ObjectId
+  queueJob   QueueJob? @relation(fields: [queueJobId], references: [id])
+}
+
+enum GenerationType {
+  TEXT
+  CODE
+  IMAGE
+  AUDIO
+  VIDEO
+}
+
+model EditTask {
+  id              String        @id @default(auto()) @map("_id") @db.ObjectId
+  sessionId       String        @db.ObjectId
+  session         AISession     @relation(fields: [sessionId], references: [id])
+  operation       EditOperation
+  target          String // File path, content ID, etc.
+  instruction     String
+  originalContent String?
+  modifiedContent String?
+  status          TaskStatus    @default(PENDING)
+  metadata        Json?         // Processing metadata (times, errors, etc.)
+  createdAt       DateTime      @default(now())
+  completedAt     DateTime?
+
+  // Background processing
+  queueJobId String?   @db.ObjectId
+  queueJob   QueueJob? @relation(fields: [queueJobId], references: [id])
+}
+
+model FlowEvent {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String     @db.ObjectId
+  user        User       @relation("UserFlowEvents", fields: [userId], references: [id])
+  sessionId   String?    @db.ObjectId
+  session     AISession? @relation(fields: [sessionId], references: [id])
+  eventType   String     // Flow event type (registration, session, task, etc.)
+  eventData   Json?      // Event-specific data
+  timestamp   DateTime   @default(now())
+}
+
+model UserProgress {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String    @db.ObjectId
+  user          User      @relation("UserProgress", fields: [userId], references: [id])
+  category      String    // Progress category (flow, session, task, etc.)
+  progressData  Json      // Progress metrics and status
+  lastUpdated   DateTime  @updatedAt
+  createdAt     DateTime  @default(now())
+
+  @@unique([userId, category])
+}
+
+model ChatRoom {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  isPrivate   Boolean   @default(false)
+  maxUsers    Int       @default(50)
+  createdBy   String    @db.ObjectId
+  creator     User      @relation("UserChatRooms", fields: [createdBy], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+enum EditOperation {
+  CREATE
+  UPDATE
+  DELETE
+  REFACTOR
+  FORMAT
+}
+
+model BrowserContext {
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
+  sessionId    String        @db.ObjectId
+  session      AISession     @relation(fields: [sessionId], references: [id])
+  contextId    String        @unique // Puppeteer context ID
+  url          String?
+  viewport     Json? // Viewport configuration
+  userAgent    String?
+  cookies      Json? // Stored cookies
+  localStorage Json? // Local storage data
+  status       BrowserStatus @default(ACTIVE)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  // Browser automation tasks
+  browserTasks BrowserTask[]
+}
+
+enum BrowserStatus {
+  ACTIVE
+  CLOSED
+  ERROR
+  SUSPENDED
+}
+
+model BrowserTask {
+  id             String          @id @default(auto()) @map("_id") @db.ObjectId
+  contextId      String          @db.ObjectId
+  browserContext BrowserContext  @relation(fields: [contextId], references: [id])
+  taskType       BrowserTaskType
+  instruction    String
+  parameters     Json? // Click coordinates, input text, etc.
+  result         Json? // Screenshots, extracted data, etc.
+  status         TaskStatus      @default(PENDING)
+  createdAt      DateTime        @default(now())
+  completedAt    DateTime?
+
+  // Background processing
+  queueJobId String?   @db.ObjectId
+  queueJob   QueueJob? @relation(fields: [queueJobId], references: [id])
+}
+
+enum BrowserTaskType {
+  NAVIGATE
+  CLICK
+  TYPE
+  SCROLL
+  SCREENSHOT
+  EXTRACT_DATA
+  WAIT_FOR_ELEMENT
+  EXECUTE_SCRIPT
+}
+
+model QueueJob {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  jobId       String    @unique // BullMQ job ID
+  queueName   String
+  jobType     JobType
+  data        Json // Job payload
+  status      JobStatus @default(WAITING)
+  priority    Int       @default(0)
+  attempts    Int       @default(0)
+  maxAttempts Int       @default(3)
+  delay       Int? // Delay in milliseconds
+  createdAt   DateTime  @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+  failedAt    DateTime?
+  error       String?
+  result      Json?
+
+  // Relations
+  sessionId       String?          @db.ObjectId
+  session         AISession?       @relation(fields: [sessionId], references: [id])
+  chatMessages    ChatMessage[]
+  generationTasks GenerationTask[]
+  editTasks       EditTask[]
+  browserTasks    BrowserTask[]
+}
+
+enum JobType {
+  CHAT_PROCESSING
+  TEXT_GENERATION
+  CODE_GENERATION
+  IMAGE_GENERATION
+  BROWSER_AUTOMATION
+  FILE_EDITING
+  SYSTEM_TASK
+}
+
+enum JobStatus {
+  WAITING
+  ACTIVE
+  COMPLETED
+  FAILED
+  DELAYED
+  PAUSED
+  STALLED
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+model SessionLog {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  sessionId String    @db.ObjectId
+  session   AISession @relation(fields: [sessionId], references: [id])
+  level     LogLevel
+  message   String
+  data      Json? // Additional log data
+  timestamp DateTime  @default(now())
+}
+
+enum LogLevel {
+  DEBUG
+  INFO
+  WARN
+  ERROR
+  FATAL
+}
+
+enum SubscriptionTier {
+  FREE
+  BASIC
+  PRO
+  ENTERPRISE
+}
+
+// Session Configuration Model
+model SessionConfig {
+  id                String    @id @default(auto()) @map("_id") @db.ObjectId
+  sessionId         String    @unique
+  browserEnabled    Boolean   @default(false)
+  aiEnabled         Boolean   @default(true)
+  queueEnabled      Boolean   @default(true)
+  maxConcurrentTasks Int      @default(5)
+  settings          Json?     // Store custom session settings
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+// ===== NEW MODELS FOR AI API PLATFORM =====
+
+// File Management Model
+model File {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  filename    String
+  originalName String
+  path        String
+  size        Int
+  mimeType    String
+  type        String    // FileType enum as string
+  url         String?
+  uploadedBy  String    @db.ObjectId
+  user        User      @relation("UserFiles", fields: [uploadedBy], references: [id])
+  metadata    Json?     // Store processing status, thumbnails, extracted text, etc.
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// API Keys Model
+model ApiKey {
+  id                     String        @id @default(auto()) @map("_id") @db.ObjectId
+  key                    String        @unique
+  keyPrefix              String?
+  name                   String
+  description            String?
+  userId                 String        @db.ObjectId
+  user                   User          @relation("UserApiKeys", fields: [userId], references: [id])
+  permissions            Json?         // Array of permissions
+  scopes                 Json?         // Array of scopes
+  monthlyLimit           Int?
+  hourlyLimit            Int?
+  allowedIps             Json?         // Array of allowed IPs
+  allowedDomains         Json?         // Array of allowed domains
+  lastUsed               DateTime?
+  isActive               Boolean       @default(true)
+  expiresAt              DateTime?
+  scheduledForDeletion   DateTime?
+  usage                  ApiKeyUsage[]
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+}
+
+model ApiKeyUsage {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  apiKeyId     String   @db.ObjectId
+  apiKey       ApiKey   @relation(fields: [apiKeyId], references: [id])
+  endpoint     String
+  method       String
+  statusCode   Int
+  responseTime Int      // milliseconds
+  requestSize  Int?     // bytes
+  responseSize Int?     // bytes
+  userAgent    String?
+  ipAddress    String?
+  timestamp    DateTime @default(now())
+  createdAt    DateTime @default(now())
+}
+
+// Chat Sessions Model
+model ChatSession {
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+  sessionId   String      @unique
+  userId      String?     @db.ObjectId
+  user        User?       @relation("UserChatSessions", fields: [userId], references: [id])
+  title       String?
+  status      String      @default("active") // active, ended, archived
+  metadata    Json?       // Store chat configuration, context, etc.
+  messages    Json?       // Store message history as JSON
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  lastMessageAt DateTime? @default(now())
+}
+
+// Plugin Management Model
+model Plugin {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  pluginId    String    @unique
+  name        String
+  version     String
+  description String?
+  author      String?
+  category    String    // ai-tool, data-processor, integration, utility, custom
+  enabled     Boolean   @default(true)
+  metadata    Json?     // Store plugin manifest, tools, hooks, etc.
+  config      Json?     // Plugin configuration
+  installedBy String?   @db.ObjectId
+  installer   User?     @relation("UserPlugins", fields: [installedBy], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// Analytics Events Model
+model AnalyticsEvent {
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  eventType  String    // chat, agent_execution, file_upload, etc.
+  userId     String?   @db.ObjectId
+  user       User?     @relation("UserAnalytics", fields: [userId], references: [id])
+  sessionId  String?
+  data       Json?     // Event-specific data
+  timestamp  DateTime  @default(now())
+  metadata   Json?     // Additional metadata
+}
+
+// Agent Executions Model  
+model AgentExecution {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  executionId  String    @unique
+  userId       String?   @db.ObjectId
+  user         User?     @relation("UserAgentExecutions", fields: [userId], references: [id])
+  sessionId    String?
+  toolName     String
+  toolId       String?
+  input        Json?     // Tool input parameters
+  output       Json?     // Tool execution result
+  status       String    @default("pending") // pending, running, completed, failed
+  error        String?   // Error message if failed
+  duration     Int?      // Execution time in milliseconds
+  createdAt    DateTime  @default(now())
+  completedAt  DateTime?
+  metadata     Json?     // Additional execution metadata
+}

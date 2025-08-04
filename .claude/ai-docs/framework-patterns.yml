@@ -1,0 +1,82 @@
+# Framework-Specific Patterns and Intelligence
+# Auto-detection triggers and activation patterns
+
+react19:
+  version: '19+'
+  triggers:
+    - package_json_contains_react
+    - jsx_files_detected
+    - react_imports_found
+  features:
+    - automatic_optimization
+    - server_components
+    - actions_api
+    - suspense
+    - react_compiler
+  types:
+    preferred: ReactElement
+    forbidden: JSX.Element
+  testing: react_testing_library
+  state_management:
+    local: useState
+    server: tanstack_query
+    global: zustand
+
+nextjs15:
+  version: '15+'
+  triggers:
+    - next_config_detected
+    - app_directory_found
+    - pages_directory_found
+  features:
+    - app_router
+    - server_components
+    - server_actions
+    - turbopack
+    - parallel_routes
+    - intercepting_routes
+  optimization:
+    images: next_image
+    fonts: next_font
+    bundle: automatic
+
+nodejs20:
+  version: '20+'
+  triggers:
+    - package_json_node_engine
+    - server_files_detected
+    - api_routes_found
+  features:
+    - native_typescript
+    - virtual_threads
+    - native_fetch
+    - permission_model
+  architecture: domain_driven_design
+  logging: structured_with_pino
+  validation: ajv_schemas
+
+astro5:
+  version: '5+'
+  triggers:
+    - astro_config_detected
+    - astro_files_found
+    - islands_architecture
+  architecture: islands_architecture
+  hydration: selective_client_directives
+  content: type_safe_collections_with_zod
+  package_manager: pnpm_mandatory
+  performance: minimal_js_by_default
+
+vue3_nuxt3:
+  vue_version: '3+'
+  nuxt_version: '3+'
+  triggers:
+    - vue_files_detected
+    - nuxt_config_found
+    - composition_api_usage
+  patterns:
+    - composition_api
+    - auto_imports
+    - universal_rendering
+  typescript: strict_integration
+  state_management: pinia

@@ -1,0 +1,269 @@
+Table "Locations" {
+  "LocationID" int [pk]
+  "Name" varchar(200)
+  "Country" varchar(100)
+  "City" varchar(100)
+}
+
+Table "ArtMovements" {
+  "MovementID" int [pk]
+  "Name" varchar(100)
+  "StartYear" int
+  "EndYear" int
+}
+
+Table "Reviews" {
+  "ReviewID" int [pk]
+  "ArtworkID" int
+  "ReviewerName" varchar(100)
+  "Rating" int
+  "Comments" text
+}
+
+Table "ArtMarkups" {
+  "MarkupID" int [pk]
+  "ArtworkID" int
+  "MarkupType" varchar(100)
+  "Description" text
+}
+
+Table "ArtworkTags" {
+  "TagID" int [pk]
+  "Name" varchar(100)
+}
+
+Table "Collections" {
+  "CollectionID" int [pk]
+  "Name" varchar(100)
+  "Description" text
+}
+
+Table "Inspirations" {
+  "InspirationID" int [pk]
+  "SourceID" int
+  "TargetID" int
+  "Description" text
+}
+
+Table "AiModels" {
+  "ModelID" int [pk]
+  "Name" varchar(100)
+  "Version" varchar(20)
+  "Description" text
+}
+
+Table "Recommendations" {
+  "RecommendationID" int [pk]
+  "UserID" int
+  "ArtworkID" int
+  "Reason" text
+}
+
+Table "ArtworkStyles" {
+  "ArtworkID" int
+  "StyleID" int
+}
+
+Table "Ratings" {
+  "RatingID" int [pk]
+  "UserID" int
+  "ArtworkID" int
+  "RatingValue" int
+}
+
+Table "CollectionArtworks" {
+  "CollectionID" int
+  "ArtworkID" int
+}
+
+Table "ArtTools" {
+  "ToolID" int [pk]
+  "Name" varchar(100)
+  "Type" varchar(100)
+  "Description" text
+}
+
+Table "UserFavorites" {
+  "UserID" int
+  "ArtworkID" int
+}
+
+Table "Styles" {
+  "StyleID" int [pk]
+  "Name" varchar(100)
+  "Characteristics" text
+}
+
+Table "Collabs" {
+  "CollabID" int [pk]
+  "ArtistID1" int
+  "ArtistID2" int
+  "Description" text
+}
+
+Table "UserProfiles" {
+  "UserID" int [pk]
+  "Username" varchar(50)
+  "Email" varchar(100)
+  "Bio" text
+}
+
+Table "ArtGenres" {
+  "GenreID" int [pk]
+  "Name" varchar(100)
+  "Description" text
+}
+
+Table "ArtistsGenres" {
+  "ArtistID" int
+  "GenreID" int
+}
+
+Table "Exhibitions" {
+  "ExhibitionID" int [pk]
+  "Title" varchar(200)
+  "LocationID" int
+  "StartDate" date
+  "EndDate" date
+}
+
+Table "ArtworkMediums" {
+  "ArtworkID" int
+  "MediumID" int
+}
+
+Table "InspirationSources" {
+  "SourceID" int [pk]
+  "Type" varchar(100)
+  "Description" text
+}
+
+Table "ArtworkTagsMapping" {
+  "ArtworkID" int
+  "TagID" int
+}
+
+Table "Artists" {
+  "ArtistID" int [pk]
+  "Name" varchar(100)
+  "Bio" text
+  "BirthDate" date
+  "Country" varchar(100)
+}
+
+Table "Comments" {
+  "CommentID" int [pk]
+  "UserID" int
+  "ArtworkID" int
+  "CommentText" text
+  "CommentDate" date
+}
+
+Table "Mediums" {
+  "MediumID" int [pk]
+  "Name" varchar(100)
+  "Description" text
+}
+
+Table "InspirationsTags" {
+  "TagID" int [pk]
+  "Name" varchar(100)
+}
+
+Table "Workshops" {
+  "WorkshopID" int [pk]
+  "Title" varchar(200)
+  "InstructorID" int
+  "Description" text
+  "Date" date
+}
+
+Table "InspirationTagsMapping" {
+  "InspirationID" int
+  "TagID" int
+}
+
+Table "Events" {
+  "EventID" int [pk]
+  "Title" varchar(200)
+  "Description" text
+  "Date" date
+  "LocationID" int
+}
+
+Table "Artworks" {
+  "ArtworkID" int [pk]
+  "Title" varchar(200)
+  "ArtistID" int
+  "CreationYear" int
+  "Medium" varchar(100)
+}
+
+Table "Colors" {
+  "ColorID" int [pk]
+  "Name" varchar(50)
+  "HexValue" varchar(7)
+  "RGBValue" varchar(20)
+}
+
+Table "Techniques" {
+  "TechniqueID" int [pk]
+  "Name" varchar(100)
+  "Description" text
+}
+
+Ref:"ArtGenres"."GenreID" < "ArtistsGenres"."GenreID"
+
+Ref:"Artists"."ArtistID" < "Artworks"."ArtistID"
+
+Ref:"Artists"."ArtistID" < "Collabs"."ArtistID2"
+
+Ref:"UserProfiles"."UserID" < "Recommendations"."UserID"
+
+Ref:"UserProfiles"."UserID" < "Ratings"."UserID"
+
+Ref:"Collections"."CollectionID" < "CollectionArtworks"."CollectionID"
+
+Ref:"Artworks"."ArtworkID" < "ArtworkStyles"."ArtworkID"
+
+Ref:"Styles"."StyleID" < "ArtworkStyles"."StyleID"
+
+Ref:"Artworks"."ArtworkID" < "UserFavorites"."ArtworkID"
+
+Ref:"Artworks"."ArtworkID" < "Ratings"."ArtworkID"
+
+Ref:"Artworks"."ArtworkID" < "CollectionArtworks"."ArtworkID"
+
+Ref:"Artworks"."ArtworkID" < "ArtworkMediums"."ArtworkID"
+
+Ref:"Artworks"."ArtworkID" < "ArtMarkups"."ArtworkID"
+
+Ref:"InspirationsTags"."TagID" < "InspirationTagsMapping"."TagID"
+
+Ref:"Locations"."LocationID" < "Events"."LocationID"
+
+Ref:"ArtworkTags"."TagID" < "ArtworkTagsMapping"."TagID"
+
+Ref:"Artists"."ArtistID" < "Collabs"."ArtistID1"
+
+Ref:"Artworks"."ArtworkID" < "Comments"."ArtworkID"
+
+Ref:"Artworks"."ArtworkID" < "Reviews"."ArtworkID"
+
+Ref:"UserProfiles"."UserID" < "UserFavorites"."UserID"
+
+Ref:"Artworks"."ArtworkID" < "ArtworkTagsMapping"."ArtworkID"
+
+Ref:"UserProfiles"."UserID" < "Comments"."UserID"
+
+Ref:"Artworks"."ArtworkID" < "Recommendations"."ArtworkID"
+
+Ref:"Locations"."LocationID" < "Exhibitions"."LocationID"
+
+Ref:"Mediums"."MediumID" < "ArtworkMediums"."MediumID"
+
+Ref:"Artists"."ArtistID" < "ArtistsGenres"."ArtistID"
+
+Ref:"Artists"."ArtistID" < "Workshops"."InstructorID"
+
+Ref:"Inspirations"."InspirationID" < "InspirationTagsMapping"."InspirationID"

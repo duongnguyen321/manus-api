@@ -1,0 +1,1293 @@
+openapi: 3.0.3
+info:
+  title: Manus AI API
+  description: |
+    A comprehensive, versatile AI system built with NestJS that provides specialized AI agents capable of performing various tasks through real AI integration (OpenAI + LangChain), background processing, and system automation.
+
+    ## Key Features
+    - **9 Specialized AI Agents** with real AI integration (no mock data)
+    - **Background Task Processing** with BullMQ and Redis queues
+    - **Session Persistence** for offline capability and long-running tasks
+    - **Real-time AI Interactions** with streaming responses via LangChain
+    - **System Tool Integration** (file operations, browser automation, shell commands)
+
+    ## Technologies Used
+    - **OpenAI + LangChain**: Real AI integration with proper streaming and tool binding
+    - **NestJS**: Progressive Node.js framework
+    - **BullMQ**: Advanced Redis-based queue system
+    - **MongoDB**: NoSQL database with Prisma ORM
+    - **TypeScript**: Strongly typed development
+
+  version: 1.0.0
+  contact:
+    name: Manus AI Team
+    email: support@manus.im
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3001/api/v1
+    description: Development server
+  - url: https://api.manus.im/api/v1
+    description: Production server
+
+paths:
+  /:
+    get:
+      summary: Health check endpoint
+      description: Returns a simple health check message
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Hello World!"
+
+  /agents:
+    get:
+      summary: List all available AI agents
+      description: Returns a list of all specialized AI agents available in the system
+      tags:
+        - Agents
+      responses:
+        '200':
+          description: List of agents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Agent'
+
+  /agents/{agentName}:
+    get:
+      summary: Get specific agent details
+      description: Returns detailed information about a specific AI agent
+      tags:
+        - Agents
+      parameters:
+        - name: agentName
+          in: path
+          required: true
+          description: Name of the agent
+          schema:
+            type: string
+            enum:
+              - artistic_inspiration_agent
+              - career_planning_agent
+              - customer_service_agent
+              - email_management_agent
+              - learning_platform_agent
+              - stress_management_agent
+              - recommendation_agent
+              - video_editing_agent
+              - general_assistant_agent
+      responses:
+        '200':
+          description: Agent details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentDetails'
+        '404':
+          description: Agent not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /agents/{agentName}/chat:
+    post:
+      summary: Chat with a specific AI agent
+      description: Send a message to a specific agent and receive an AI-generated response using OpenAI + LangChain
+      tags:
+        - Agents
+        - Chat
+      parameters:
+        - name: agentName
+          in: path
+          required: true
+          description: Name of the agent to chat with
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+      responses:
+        '200':
+          description: Chat response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /agents/tools/execute:
+    post:
+      summary: Execute a specific AI tool
+      description: Execute any specialized AI tool with parameters using LangChain integration
+      tags:
+        - Tools
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ToolExecuteRequest'
+      responses:
+        '200':
+          description: Tool execution result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolExecuteResponse'
+
+  /agents/tools/list:
+    get:
+      summary: Get list of all available AI tools
+      description: Retrieve a comprehensive list of all specialized AI tools with their capabilities and requirements
+      tags:
+        - Tools
+      parameters:
+        - name: category
+          in: query
+          required: false
+          description: Filter tools by category
+          schema:
+            type: string
+            enum: ['web', 'content', 'analysis', 'automation', 'creative', 'productivity']
+      responses:
+        '200':
+          description: List of available tools
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ToolInfo'
+
+  /agents/tools/{toolName}:
+    get:
+      summary: Get detailed information about a specific AI tool
+      description: Get comprehensive details about a specific tool including usage examples and parameter specifications
+      tags:
+        - Tools
+      parameters:
+        - name: toolName
+          in: path
+          required: true
+          description: Name of the tool to get information about
+          schema:
+            type: string
+            example: 'search_web'
+      responses:
+        '200':
+          description: Detailed tool information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolDetailInfo'
+        '404':
+          description: Tool not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /session/create:
+    post:
+      summary: Create a new session
+      description: Create a new session for persistent task management
+      tags:
+        - Session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionCreateRequest'
+      responses:
+        '201':
+          description: Session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+
+  /session/{sessionId}:
+    get:
+      summary: Get session status
+      description: Get the current status of a session
+      tags:
+        - Session
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          description: Session ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionStatus'
+
+  /chat:
+    post:
+      summary: Background chat processing
+      description: Send a message for background processing with queue management
+      tags:
+        - Chat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BackgroundChatRequest'
+      responses:
+        '202':
+          description: Chat task queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+
+  /chat/task/{taskId}:
+    get:
+      summary: Get chat task status
+      description: Get the status of a background chat task
+      tags:
+        - Chat
+        - Tasks
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          description: Task ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskStatus'
+
+  /chat/health:
+    get:
+      summary: Chat service health check
+      description: Check the health of the chat processing service
+      tags:
+        - Chat
+        - Health
+      responses:
+        '200':
+          description: Service health status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+
+  /generate/text:
+    post:
+      summary: Generate text content
+      description: Generate text content using AI with LangChain integration
+      tags:
+        - Generation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TextGenerateRequest'
+      responses:
+        '202':
+          description: Text generation task queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+
+  /generate/code:
+    post:
+      summary: Generate code
+      description: Generate code using AI with specific language and framework parameters
+      tags:
+        - Generation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CodeGenerateRequest'
+      responses:
+        '202':
+          description: Code generation task queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+
+  /generate/image:
+    post:
+      summary: Generate image description
+      description: Generate image descriptions or concepts using AI
+      tags:
+        - Generation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImageGenerateRequest'
+      responses:
+        '202':
+          description: Image generation task queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+
+  /generate/task/{taskId}:
+    get:
+      summary: Get generation task status
+      description: Get the status of a generation task
+      tags:
+        - Generation
+        - Tasks
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          description: Task ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskStatus'
+
+  /generate/task/{taskId}/retry:
+    post:
+      summary: Retry failed generation task
+      description: Retry a failed generation task
+      tags:
+        - Generation
+        - Tasks
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          description: Task ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task retried
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+
+  /generate/task/{taskId}/cancel:
+    post:
+      summary: Cancel generation task
+      description: Cancel a running generation task
+      tags:
+        - Generation
+        - Tasks
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          description: Task ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+
+  /generate/task/{taskId}:
+    delete:
+      summary: Delete generation task
+      description: Delete a completed or failed generation task
+      tags:
+        - Generation
+        - Tasks
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          description: Task ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+
+  /generate/history/{sessionId}:
+    get:
+      summary: Get generation history
+      description: Get the generation history for a session
+      tags:
+        - Generation
+        - History
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          description: Session ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Generation history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GenerationHistoryItem'
+
+  /generate/health:
+    get:
+      summary: Generation service health check
+      description: Check the health of the generation service  
+      tags:
+        - Generation
+        - Health
+      responses:
+        '200':
+          description: Service health status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+
+  /edit:
+    post:
+      summary: General file editing
+      description: Perform general file editing operations using AI
+      tags:
+        - Edit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditRequest'
+      responses:
+        '202':
+          description: Edit task queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+
+  /edit/create:
+    post:
+      summary: Create new file
+      description: Create a new file with AI-generated content
+      tags:
+        - Edit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileCreateRequest'
+      responses:
+        '202':
+          description: File creation task queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+
+  /edit/update:
+    post:
+      summary: Update existing file
+      description: Update an existing file using AI assistance
+      tags:
+        - Edit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileUpdateRequest'
+      responses:
+        '202':
+          description: File update task queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+
+  /edit/delete:
+    post:
+      summary: Delete file
+      description: Delete a file from the system
+      tags:
+        - Edit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileDeleteRequest'
+      responses:
+        '202':
+          description: File deletion task queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+
+  /edit/refactor:
+    post:
+      summary: Refactor code
+      description: Refactor existing code using AI assistance
+      tags:
+        - Edit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CodeRefactorRequest'
+      responses:
+        '202':
+          description: Code refactoring task queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+
+  /edit/format:
+    post:
+      summary: Format code
+      description: Format code using AI-powered formatting
+      tags:
+        - Edit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CodeFormatRequest'
+      responses:
+        '202':
+          description: Code formatting task queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+
+  /edit/task/{taskId}:
+    get:
+      summary: Get edit task status
+      description: Get the status of an edit task
+      tags:
+        - Edit
+        - Tasks
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          description: Task ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskStatus'
+
+  /edit/history/{sessionId}:
+    get:
+      summary: Get edit history
+      description: Get the edit history for a session
+      tags:
+        - Edit
+        - History
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          description: Session ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Edit history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EditHistoryItem'
+
+  /edit/task/{taskId}/retry:
+    post:
+      summary: Retry failed edit task
+      description: Retry a failed edit task
+      tags:
+        - Edit
+        - Tasks
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          description: Task ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task retried
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+
+  /edit/task/{taskId}/cancel:
+    post:
+      summary: Cancel edit task
+      description: Cancel a running edit task
+      tags:
+        - Edit
+        - Tasks
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          description: Task ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+
+  /edit/task/{taskId}:
+    delete:
+      summary: Delete edit task
+      description: Delete a completed or failed edit task
+      tags:
+        - Edit
+        - Tasks
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          description: Task ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+
+  /edit/health:
+    get:
+      summary: Edit service health check
+      description: Check the health of the edit service
+      tags:
+        - Edit
+        - Health
+      responses:
+        '200':
+          description: Service health status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+
+components:
+  schemas:
+    Agent:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Agent identifier name
+        description:
+          type: string
+          description: Agent description and capabilities
+        tools:
+          type: array
+          items:
+            type: string
+          description: List of tools available to this agent
+        category:
+          type: string
+          description: Agent category
+
+    AgentDetails:
+      allOf:
+        - $ref: '#/components/schemas/Agent'
+        - type: object
+          properties:
+            systemPrompt:
+              type: string
+              description: System prompt used by the agent
+            settings:
+              type: object
+              properties:
+                temperature:
+                  type: number
+                  format: float
+                  description: AI model temperature setting
+                maxTokens:
+                  type: integer
+                  description: Maximum tokens for AI responses
+
+    ChatRequest:
+      type: object
+      required:
+        - message
+        - userId
+      properties:
+        message:
+          type: string
+          description: The message to send to the agent
+        userId:
+          type: string
+          description: User identifier
+        conversationHistory:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatMessage'
+          description: Previous conversation messages
+        conversationId:
+          type: string
+          description: Conversation identifier
+
+    ChatMessage:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: [user, assistant, system]
+        content:
+          type: string
+
+    ChatResponse:
+      type: object
+      properties:
+        agent:
+          type: string
+          description: Agent that processed the message
+        response:
+          type: string
+          description: AI-generated response using OpenAI + LangChain
+        toolsUsed:
+          type: array
+          items:
+            type: string
+          description: Tools used during response generation
+        timestamp:
+          type: string
+          format: date-time
+        conversationId:
+          type: string
+
+    ToolExecuteRequest:
+      type: object
+      required:
+        - toolName
+        - parameters
+        - userId
+      properties:
+        toolName:
+          type: string
+          description: Name of the tool to execute
+        parameters:
+          type: object
+          description: Parameters for tool execution
+        userId:
+          type: string
+          description: User identifier
+
+    ToolExecuteResponse:
+      type: object
+      properties:
+        result:
+          type: string
+          description: Tool execution result
+        toolName:
+          type: string
+        executionTime:
+          type: number
+          description: Execution time in milliseconds
+        timestamp:
+          type: string
+          format: date-time
+
+    ToolInfo:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Tool name
+          example: 'search_web'
+        description:
+          type: string
+          description: Tool description
+          example: 'Search the web for information'
+        category:
+          type: string
+          description: Tool category
+          example: 'web'
+        parameters:
+          type: object
+          description: Required parameters schema
+          example:
+            query:
+              type: string
+              required: true
+              description: Search query
+        agentRequired:
+          type: string
+          description: Required agent for this tool
+          example: 'general_assistant_agent'
+
+    ToolDetailInfo:
+      allOf:
+        - $ref: '#/components/schemas/ToolInfo'
+        - type: object
+          properties:
+            examples:
+              type: array
+              items:
+                type: object
+                properties:
+                  title:
+                    type: string
+                  parameters:
+                    type: object
+                  expectedOutput:
+                    type: string
+              description: Usage examples
+            capabilities:
+              type: array
+              items:
+                type: string
+              description: Tool capabilities
+              example: ['web_search', 'content_analysis', 'link_extraction']
+            limitations:
+              type: array
+              items:
+                type: string
+              description: Tool limitations
+            version:
+              type: string
+              description: Tool version
+            lastUpdated:
+              type: string
+              format: date-time
+              description: Last update timestamp
+
+    SessionCreateRequest:
+      type: object
+      required:
+        - sessionName
+      properties:
+        sessionName:
+          type: string
+          description: Name for the session
+        metadata:
+          type: object
+          description: Additional session metadata
+
+    SessionResponse:
+      type: object
+      properties:
+        sessionId:
+          type: string
+          description: Unique session identifier
+        sessionName:
+          type: string
+        status:
+          type: string
+          enum: [active, inactive]
+        createdAt:
+          type: string
+          format: date-time
+
+    SessionStatus:
+      type: object
+      properties:
+        sessionId:
+          type: string
+        status:
+          type: string
+          enum: [active, inactive, suspended]
+        tasksInQueue:
+          type: integer
+          description: Number of tasks in queue
+        completedTasks:
+          type: integer
+          description: Number of completed tasks
+        configuration:
+          type: object
+          properties:
+            aiEnabled:
+              type: boolean
+            queueEnabled:
+              type: boolean
+            maxConcurrentTasks:
+              type: integer
+
+    BackgroundChatRequest:
+      type: object
+      required:
+        - message
+        - sessionId
+      properties:
+        message:
+          type: string
+          description: Message for background processing
+        sessionId:
+          type: string
+          description: Session identifier
+        agentType:
+          type: string
+          description: Type of agent to use
+        priority:
+          type: string
+          enum: [low, normal, high]
+          default: normal
+
+    TaskResponse:
+      type: object
+      properties:
+        taskId:
+          type: string
+          description: Unique task identifier
+        status:
+          type: string
+          enum: [queued, processing, completed, failed]
+        estimatedTime:
+          type: string
+          description: Estimated completion time
+        sessionId:
+          type: string
+
+    TaskStatus:
+      type: object
+      properties:
+        taskId:
+          type: string
+        status:
+          type: string
+          enum: [queued, processing, completed, failed, cancelled]
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Task completion percentage
+        result:
+          type: string
+          description: Task result (available when completed)
+        error:
+          type: string
+          description: Error message (available when failed)
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+
+    TextGenerateRequest:
+      type: object
+      required:
+        - prompt
+        - sessionId
+      properties:
+        prompt:
+          type: string
+          description: Text generation prompt
+        sessionId:
+          type: string
+        parameters:
+          type: object
+          properties:
+            maxTokens:
+              type: integer
+              default: 2000
+            temperature:
+              type: number
+              format: float
+              default: 0.7
+            style:
+              type: string
+              description: Writing style preference
+
+    CodeGenerateRequest:
+      type: object
+      required:
+        - prompt
+        - sessionId
+      properties:
+        prompt:
+          type: string
+          description: Code generation prompt
+        language:
+          type: string
+          description: Programming language
+        framework:
+          type: string
+          description: Framework or library to use
+        sessionId:
+          type: string
+
+    ImageGenerateRequest:
+      type: object
+      required:
+        - prompt
+        - sessionId
+      properties:
+        prompt:
+          type: string
+          description: Image description prompt
+        sessionId:
+          type: string
+
+    EditRequest:
+      type: object
+      required:
+        - instruction
+        - sessionId
+      properties:
+        instruction:
+          type: string
+          description: Edit instruction
+        target:
+          type: string
+          description: Target file or content
+        sessionId:
+          type: string
+
+    FileCreateRequest:
+      type: object
+      required:
+        - instruction
+        - sessionId
+      properties:
+        instruction:
+          type: string
+          description: File creation instruction
+        filePath:
+          type: string
+          description: Desired file path
+        sessionId:
+          type: string
+
+    FileUpdateRequest:
+      type: object
+      required:
+        - instruction
+        - target
+        - sessionId
+      properties:
+        instruction:
+          type: string
+          description: Update instruction
+        target:
+          type: string
+          description: Target file path
+        sessionId:
+          type: string
+
+    FileDeleteRequest:
+      type: object
+      required:
+        - target
+        - sessionId
+      properties:
+        target:
+          type: string
+          description: File to delete
+        sessionId:
+          type: string
+
+    CodeRefactorRequest:
+      type: object
+      required:
+        - target
+        - instruction
+        - sessionId
+      properties:
+        target:
+          type: string
+          description: Target file or code to refactor
+        operation:
+          type: string
+          default: refactor
+        instruction:
+          type: string
+          description: Refactoring instruction
+        sessionId:
+          type: string
+
+    CodeFormatRequest:
+      type: object
+      required:
+        - code
+        - sessionId
+      properties:
+        code:
+          type: string
+          description: Code to format
+        language:
+          type: string
+          description: Programming language
+        sessionId:
+          type: string
+
+    GenerationHistoryItem:
+      type: object
+      properties:
+        id:
+          type: string
+        prompt:
+          type: string
+        result:
+          type: string
+        type:
+          type: string
+          enum: [text, code, image]
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [completed, failed]
+
+    EditHistoryItem:
+      type: object
+      properties:
+        id:
+          type: string
+        operation:
+          type: string
+          enum: [create, update, delete, refactor, format]
+        target:
+          type: string
+        instruction:
+          type: string
+        result:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [completed, failed]
+
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        timestamp:
+          type: string
+          format: date-time
+        services:
+          type: object
+          properties:
+            ai:
+              type: string
+              enum: [operational, degraded, down]
+            database:
+              type: string
+              enum: [operational, degraded, down]
+            queue:
+              type: string
+              enum: [operational, degraded, down]
+        version:
+          type: string
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+        error:
+          type: string
+          description: Error type
+        statusCode:
+          type: integer
+          description: HTTP status code
+        timestamp:
+          type: string
+          format: date-time
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Health
+    description: Health check and system status endpoints
+  - name: Agents
+    description: AI agent management and interaction
+  - name: Chat
+    description: Real-time and background chat processing
+  - name: Session
+    description: Session management for persistent tasks
+  - name: Generation
+    description: AI content generation (text, code, images)
+  - name: Edit
+    description: File and code editing operations
+  - name: Tasks
+    description: Background task management
+  - name: History
+    description: Operation history and analytics
+  - name: Tools
+    description: Tool execution and management

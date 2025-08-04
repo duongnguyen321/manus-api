@@ -1,0 +1,331 @@
+Table "UserRewards" {
+  "user_reward_id" int [pk]
+  "user_id" int
+  "reward_id" int
+  "awarded_date" date
+}
+
+Table "NutritionLogs" {
+  "nutrition_id" int [pk]
+  "user_id" int
+  "meal_type" varchar(50)
+  "nutrition_date" date
+  "calories" int
+  "protein" int
+  "carbs" int
+  "fats" int
+}
+
+Table "Questionnaire" {
+  "questionnaire_id" int [pk]
+  "title" varchar(100)
+  "description" text
+}
+
+Table "MeditationSessions" {
+  "meditation_session_id" int [pk]
+  "user_id" int
+  "meditation_type" varchar(100)
+  "meditation_date" date
+  "duration_minutes" int
+  "notes" text
+}
+
+Table "UserQuestionResponses" {
+  "response_id" int [pk]
+  "user_id" int
+  "questionnaire_id" int
+  "question_text" text
+  "response_text" text
+  "response_date" date
+}
+
+Table "Journals" {
+  "journal_id" int [pk]
+  "user_id" int
+  "entry_date" date
+  "mood" varchar(50)
+  "journal_text" text
+}
+
+Table "ExerciseLogs" {
+  "exercise_id" int [pk]
+  "user_id" int
+  "exercise_type" varchar(50)
+  "duration" int
+  "calories_burned" int
+  "exercise_date" date
+}
+
+Table "EducationalResources" {
+  "resource_id" int [pk]
+  "title" varchar(100)
+  "resource_type" varchar(50)
+  "resource_url" varchar(255)
+  "description" text
+}
+
+Table "PersonalGoals" {
+  "goal_id" int [pk]
+  "user_id" int
+  "goal_description" text
+  "target_date" date
+  "achievement_status" varchar(50)
+}
+
+Table "UserResourceEngagement" {
+  "engagement_id" int [pk]
+  "user_id" int
+  "resource_id" int
+  "engagement_date" date
+  "engagement_duration" int
+}
+
+Table "SocialConnections" {
+  "connection_id" int [pk]
+  "user_id" int
+  "connection_user_id" int
+  "connection_type" varchar(50)
+  "connection_status" varchar(50)
+}
+
+Table "TherapyAppointments" {
+  "appointment_id" int [pk]
+  "user_id" int
+  "therapist_name" varchar(100)
+  "appointment_date" datetime
+  "session_notes" text
+}
+
+Table "UserSupportGroupMemberships" {
+  "membership_id" int [pk]
+  "user_id" int
+  "group_id" int
+  "join_date" date
+}
+
+Table "UserProfiles" {
+  "profile_id" int [pk]
+  "user_id" int
+  "bio" text
+  "profile_picture_url" varchar(255)
+  "occupation" varchar(100)
+}
+
+Table "Therapist" {
+  "therapist_id" int [pk]
+  "name" varchar(100)
+  "specialization" varchar(100)
+  "contact_email" varchar(100)
+  "contact_phone" varchar(20)
+}
+
+Table "MonitorPhysicalActivity" {
+  "activity_session_id" int [pk]
+  "user_id" int
+  "activity_type" varchar(100)
+  "start_time" datetime
+  "end_time" datetime
+  "steps_count" int
+  "distance" float
+  "calories_burned" int
+}
+
+Table "UserPreferences" {
+  "preference_id" int [pk]
+  "user_id" int
+  "preference_name" varchar(100)
+  "preference_value" varchar(255)
+}
+
+Table "Sessions" {
+  "session_id" int [pk]
+  "user_id" int
+  "session_date" datetime
+  "session_type" varchar(50)
+  "duration" int
+  "notes" text
+}
+
+Table "Notifications" {
+  "notification_id" int [pk]
+  "user_id" int
+  "message" text
+  "notification_date" datetime
+  "read_status" varchar(10)
+}
+
+Table "Activities" {
+  "activity_id" int [pk]
+  "name" varchar(100)
+  "description" text
+  "activity_type" varchar(50)
+}
+
+Table "UserActivities" {
+  "record_id" int [pk]
+  "user_id" int
+  "activity_id" int
+  "start_time" datetime
+  "end_time" datetime
+  "intensity_level" int
+  "notes" text
+}
+
+Table "SleepPatterns" {
+  "sleep_id" int [pk]
+  "user_id" int
+  "sleep_date" date
+  "sleep_duration" int
+  "sleep_quality" int
+}
+
+Table "Techniques" {
+  "technique_id" int [pk]
+  "name" varchar(100)
+  "description" text
+}
+
+Table "MindfulnessPractices" {
+  "practice_id" int [pk]
+  "name" varchar(100)
+  "description" text
+}
+
+Table "Users" {
+  "user_id" int [pk]
+  "username" varchar(50)
+  "email" varchar(100)
+  "password_hash" varchar(256)
+  "date_of_birth" date
+  "gender" varchar(10)
+}
+
+Table "UserMindfulnessSessions" {
+  "session_id" int [pk]
+  "user_id" int
+  "practice_id" int
+  "session_date" date
+  "duration_minutes" int
+  "notes" text
+}
+
+Table "Rewards" {
+  "reward_id" int [pk]
+  "reward_name" varchar(100)
+  "reward_points" int
+  "reward_description" text
+}
+
+Table "SupportContacts" {
+  "contact_id" int [pk]
+  "user_id" int
+  "contact_name" varchar(100)
+  "contact_relationship" varchar(50)
+  "contact_phone" varchar(20)
+  "contact_email" varchar(100)
+}
+
+Table "UserTherapistAssignments" {
+  "assignment_id" int [pk]
+  "user_id" int
+  "therapist_id" int
+  "start_date" date
+  "end_date" date
+}
+
+Table "PeerSupportGroups" {
+  "group_id" int [pk]
+  "group_name" varchar(100)
+  "description" text
+}
+
+Table "Feedback" {
+  "feedback_id" int [pk]
+  "user_id" int
+  "feedback_text" text
+  "feedback_date" datetime
+  "ratings" int
+}
+
+Table "StressLogs" {
+  "log_id" int [pk]
+  "user_id" int
+  "stress_level" int
+  "log_date" datetime
+  "physical_symptoms" varchar(255)
+  "emotional_symptoms" varchar(255)
+}
+
+Table "UserTechniques" {
+  "assignment_id" int [pk]
+  "user_id" int
+  "technique_id" int
+  "date_assigned" date
+  "status" varchar(50)
+  "efficacy_rating" int
+}
+
+Ref:"Users"."user_id" < "SleepPatterns"."user_id"
+
+Ref:"Users"."user_id" < "Notifications"."user_id"
+
+Ref:"Users"."user_id" < "ExerciseLogs"."user_id"
+
+Ref:"Users"."user_id" < "UserQuestionResponses"."user_id"
+
+Ref:"Users"."user_id" < "Journals"."user_id"
+
+Ref:"PeerSupportGroups"."group_id" < "UserSupportGroupMemberships"."group_id"
+
+Ref:"Users"."user_id" < "UserTherapistAssignments"."user_id"
+
+Ref:"Users"."user_id" < "UserProfiles"."user_id"
+
+Ref:"MindfulnessPractices"."practice_id" < "UserMindfulnessSessions"."practice_id"
+
+Ref:"Users"."user_id" < "UserRewards"."user_id"
+
+Ref:"Users"."user_id" < "NutritionLogs"."user_id"
+
+Ref:"Users"."user_id" < "PersonalGoals"."user_id"
+
+Ref:"Users"."user_id" < "Sessions"."user_id"
+
+Ref:"Users"."user_id" < "Feedback"."user_id"
+
+Ref:"Users"."user_id" < "SocialConnections"."user_id"
+
+Ref:"Users"."user_id" < "StressLogs"."user_id"
+
+Ref:"Rewards"."reward_id" < "UserRewards"."reward_id"
+
+Ref:"Therapist"."therapist_id" < "UserTherapistAssignments"."therapist_id"
+
+Ref:"Users"."user_id" < "UserActivities"."user_id"
+
+Ref:"Users"."user_id" < "UserPreferences"."user_id"
+
+Ref:"Techniques"."technique_id" < "UserTechniques"."technique_id"
+
+Ref:"Users"."user_id" < "UserTechniques"."user_id"
+
+Ref:"Activities"."activity_id" < "UserActivities"."activity_id"
+
+Ref:"Users"."user_id" < "MonitorPhysicalActivity"."user_id"
+
+Ref:"EducationalResources"."resource_id" < "UserResourceEngagement"."resource_id"
+
+Ref:"Users"."user_id" < "SupportContacts"."user_id"
+
+Ref:"Questionnaire"."questionnaire_id" < "UserQuestionResponses"."questionnaire_id"
+
+Ref:"Users"."user_id" < "TherapyAppointments"."user_id"
+
+Ref:"Users"."user_id" < "UserMindfulnessSessions"."user_id"
+
+Ref:"Users"."user_id" < "UserSupportGroupMemberships"."user_id"
+
+Ref:"Users"."user_id" < "MeditationSessions"."user_id"
+
+Ref:"Users"."user_id" < "UserResourceEngagement"."user_id"

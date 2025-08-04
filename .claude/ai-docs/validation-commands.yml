@@ -1,0 +1,81 @@
+# Executable Validation Commands by Framework
+# Quality gates and testing patterns
+
+react_nextjs:
+  level_1_syntax:
+    - "npm run type-check"
+    - "npm run lint --max-warnings 0"
+    - "npm run format"
+  level_2_tests:
+    - "npm run test -- --coverage --passWithNoTests"
+  level_3_build:
+    - "npm run build"
+  level_4_e2e:
+    - "npm run test:e2e"
+
+nodejs:
+  level_1_syntax:
+    - "npm run type-check"
+    - "npm run lint --max-warnings 0"
+  level_2_tests:
+    - "npm run test -- --coverage"
+  level_3_security:
+    - "npm audit --audit-level=moderate"
+  level_4_integration:
+    - "npm run build && npm run start --timeout=5000"
+
+astro:
+  level_1_syntax:
+    - "pnpm run check"
+    - "pnpm run lint --max-warnings 0"
+  level_2_tests:
+    - "pnpm run test:coverage"
+  level_3_build:
+    - "pnpm run build"
+  level_4_ssr:
+    - "pnpm run preview"
+
+vue_nuxt:
+  level_1_syntax:
+    - "npm run type-check"
+    - "npm run lint --max-warnings 0"
+  level_2_tests:
+    - "npm run test:unit -- --coverage"
+  level_3_build:
+    - "npm run build"
+  level_4_generate:
+    - "npm run generate"
+
+universal:
+  basic:
+    - "npm run lint"
+    - "npm run test"
+    - "npm run build"
+  comprehensive:
+    - "npm run type-check && npm run lint --max-warnings 0"
+    - "npm run test -- --coverage"
+    - "npm run build && npm run preview"
+
+quality_gates:
+  coverage_minimum: 80
+  complexity_max: 15
+  file_size_limits:
+    component: 200
+    general: 500
+    function: 50
+  
+error_patterns:
+  typescript:
+    - "Type '.*' is not assignable to type '.*'"
+    - "Property '.*' does not exist on type '.*'"
+    - "Cannot find module '.*'"
+  runtime:
+    - "ReferenceError: .* is not defined"
+    - "TypeError: Cannot read properties of undefined"
+    - "SyntaxError: Unexpected token"
+  
+debug_commands:
+  typescript: "npx tsc --noEmit --listFiles"
+  eslint: "npx eslint --debug"
+  build: "npm run build -- --verbose"
+  test: "npm run test -- --verbose --no-coverage"

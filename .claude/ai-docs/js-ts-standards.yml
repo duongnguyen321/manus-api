@@ -1,0 +1,102 @@
+# JavaScript/TypeScript Development Standards
+# Core requirements and patterns for all JS/TS projects
+
+ecosystem:
+  frontend:
+    - React 19+
+    - Next.js 15+
+    - Astro 5+
+    - Vue 3+
+    - Nuxt 3+
+  backend:
+    - Node.js 20+
+    - Nest.js
+    - Express
+    - Fastify
+  runtime:
+    - Node.js
+    - Bun
+    - Deno
+  testing:
+    - Vitest
+    - Jest
+    - Node Test Runner
+  validation:
+    - Zod
+    - AJV
+    - Joi
+  bundling:
+    - Vite
+    - Webpack
+    - Turbopack
+    - esbuild
+
+package_manager_priority:
+  - bun
+  - pnpm
+  - yarn
+  - npm
+
+typescript_requirements:
+  strict_mode: true
+  no_any_type: true
+  explicit_return_types: true
+  compiler_options:
+    strict: true
+    noImplicitAny: true
+    noUncheckedIndexedAccess: true
+    exactOptionalPropertyTypes: true
+
+core_patterns:
+  - KISS
+  - YAGNI
+  - DRY
+  - component_composition
+  - vertical_slice_architecture
+
+file_limits:
+  component: 200
+  general: 500
+  function: 50
+  cognitive_complexity: 15
+
+quality_gates:
+  coverage_minimum: 80
+  eslint_max_warnings: 0
+  typescript_errors: 0
+
+search_requirements:
+  forbidden:
+    - grep
+    - find_with_name
+  required:
+    - rg
+    - ripgrep
+  patterns:
+    file_search: "rg --files -g '*.{js,ts,jsx,tsx,vue,astro}'"
+    content_search: "rg 'pattern' --type js --type ts"
+    case_insensitive: "rg -i 'pattern'"
+    context_lines: "rg -A 3 -B 3 'pattern'"
+
+security_requirements:
+  input_validation: validate_ALL_external_data
+  environment_secrets: NEVER_in_code_use_env_vars
+  headers:
+    - content_security_policy
+    - strict_transport_security
+    - explicit_cors_control
+
+performance_standards:
+  frontend:
+    - bundle_size_monitoring
+    - code_splitting
+    - image_optimization
+    - minimal_hydration
+  backend:
+    - NEVER_block_event_loop
+    - connection_pooling
+    - multi_level_caching
+  universal:
+    - async_await_preferred
+    - streaming_large_responses
+    - compression_required

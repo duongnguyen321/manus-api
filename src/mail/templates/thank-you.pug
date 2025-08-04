@@ -1,0 +1,48 @@
+doctype html
+html
+    head
+        meta(charset="UTF-8")
+        title Thank You for Contacting Us #{name}!
+        style.
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #000;
+                color: #fff;
+                text-align: center;
+                padding: 20px;
+            }
+
+            .container {
+                margin: 0 auto;
+                padding: 20px;
+                border: 1px solid #444;
+                border-radius: 8px;
+                background-color: #111;
+                max-width: 600px;
+                box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+            }
+
+            h1 {
+                color: #ffd700;
+            }
+
+            .logo-img {
+                margin: 20px 0;
+                max-width: 150px;
+                height: auto;
+            }
+    body
+        .container
+            h1 Thank You, #{name}!
+            p We've received your contact details.
+            p Here's what you provided:
+            ul
+                li Name: #{name}
+                li Phone:
+                    a(href=`tel:${phone}`) #{phone}
+                li Email:
+                    a(href=`mailto:${email}`) #{email}
+                li Message: #{message}
+
+            p We'll get back to you as soon as possible. Until then, enjoy the stars! 🌌
+            img.logo-img(src=trackingUrl, alt="Logo")

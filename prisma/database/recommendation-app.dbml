@@ -1,0 +1,319 @@
+Table "Transactions" {
+  "transaction_id" int [pk]
+  "user_id" int
+  "transaction_amount" "decimal(10, 2)"
+  "transaction_date" datetime
+  "payment_method_id" int
+}
+
+Table "Admins" {
+  "admin_id" int [pk]
+  "admin_name" varchar(50)
+  "admin_email" varchar(100)
+  "admin_password" varchar(100)
+}
+
+Table "ContentViews" {
+  "view_id" int [pk]
+  "content_id" int
+  "user_id" int
+  "view_date" datetime
+}
+
+Table "Ratings" {
+  "rating_id" int [pk]
+  "user_id" int
+  "content_id" int
+  "rating_value" float
+  "rating_date" datetime
+}
+
+Table "ContentShares" {
+  "share_id" int [pk]
+  "content_id" int
+  "user_id" int
+  "share_date" datetime
+  "platform" varchar(50)
+}
+
+Table "AdClicks" {
+  "click_id" int [pk]
+  "ad_id" int
+  "user_id" int
+  "click_date" datetime
+}
+
+Table "Users" {
+  "user_id" int [pk]
+  "user_name" varchar(50)
+  "user_email" varchar(100)
+  "user_password" varchar(100)
+  "user_date_of_birth" date
+}
+
+Table "ContentTags" {
+  "content_tag_id" int [pk]
+  "content_id" int
+  "tag_id" int
+}
+
+Table "Likes" {
+  "like_id" int [pk]
+  "user_id" int
+  "content_id" int
+  "like_date" datetime
+}
+
+Table "Playlists" {
+  "playlist_id" int [pk]
+  "user_id" int
+  "playlist_name" varchar(100)
+  "playlist_description" text
+  "creation_date" datetime
+}
+
+Table "UserFollows" {
+  "follow_id" int [pk]
+  "follower_id" int
+  "following_id" int
+  "follow_date" datetime
+}
+
+Table "UserProfiles" {
+  "profile_id" int [pk]
+  "user_id" int
+  "profile_picture" varchar(255)
+  "bio" text
+  "profile_creation_date" datetime
+}
+
+Table "Notifications" {
+  "notification_id" int [pk]
+  "user_id" int
+  "notification_text" text
+  "notification_date" datetime
+}
+
+Table "PlaylistContents" {
+  "playlist_content_id" int [pk]
+  "playlist_id" int
+  "content_id" int
+  "addition_date" datetime
+}
+
+Table "AdImpressions" {
+  "impression_id" int [pk]
+  "ad_id" int
+  "user_id" int
+  "impression_date" datetime
+}
+
+Table "ContentReports" {
+  "content_report_id" int [pk]
+  "content_id" int
+  "user_id" int
+  "report_reason" text
+  "report_date" datetime
+  "report_status" varchar(50)
+}
+
+Table "Contents" {
+  "content_id" int [pk]
+  "content_title" varchar(255)
+  "content_description" text
+  "content_type" varchar(50)
+  "content_creation_date" datetime
+  "content_creator_id" int
+}
+
+Table "PaymentMethods" {
+  "payment_method_id" int [pk]
+  "user_id" int
+  "payment_type" varchar(50)
+  "card_number" varchar(20)
+  "expiration_date" date
+  "holder_name" varchar(100)
+}
+
+Table "IssuesReports" {
+  "report_id" int [pk]
+  "user_id" int
+  "issue_description" text
+  "report_date" datetime
+  "issue_status" varchar(50)
+}
+
+Table "ContentRecommendations" {
+  "recommendation_id" int [pk]
+  "user_id" int
+  "content_id" int
+  "recommendation_date" datetime
+}
+
+Table "ContentAnalytics" {
+  "analytics_id" int [pk]
+  "content_id" int
+  "views" int
+  "likes" int
+  "shares" int
+  "comments" int
+  "duration_watched" int
+}
+
+Table "Tags" {
+  "tag_id" int [pk]
+  "tag_name" varchar(50)
+}
+
+Table "ApiTokens" {
+  "token_id" int [pk]
+  "user_id" int
+  "token" varchar(255)
+  "expiration_date" datetime
+}
+
+Table "UserActivities" {
+  "activity_id" int [pk]
+  "user_id" int
+  "activity_description" text
+  "activity_timestamp" datetime
+}
+
+Table "Advertisements" {
+  "ad_id" int [pk]
+  "ad_title" varchar(100)
+  "ad_description" text
+  "ad_link" varchar(255)
+  "ad_creation_date" datetime
+}
+
+Table "Categories" {
+  "category_id" int [pk]
+  "category_name" varchar(50)
+}
+
+Table "ContentCategories" {
+  "content_category_id" int [pk]
+  "content_id" int
+  "category_id" int
+}
+
+Table "Comments" {
+  "comment_id" int [pk]
+  "content_id" int
+  "user_id" int
+  "comment_text" text
+  "comment_date" datetime
+}
+
+Table "Sessions" {
+  "session_id" int [pk]
+  "user_id" int
+  "session_start" datetime
+  "session_end" datetime
+  "session_token" varchar(255)
+}
+
+Table "ContentCreators" {
+  "creator_id" int [pk]
+  "creator_name" varchar(50)
+  "creator_email" varchar(100)
+  "creator_bio" text
+}
+
+Table "Messages" {
+  "message_id" int [pk]
+  "sender_id" int
+  "receiver_id" int
+  "message_text" text
+  "message_timestamp" datetime
+}
+
+Table "Subscriptions" {
+  "subscription_id" int [pk]
+  "user_id" int
+  "creator_id" int
+  "subscription_date" datetime
+}
+
+Ref:"Contents"."content_id" < "Likes"."content_id"
+
+Ref:"Contents"."content_id" < "ContentTags"."content_id"
+
+Ref:"Users"."user_id" < "Notifications"."user_id"
+
+Ref:"Contents"."content_id" < "ContentViews"."content_id"
+
+Ref:"Users"."user_id" < "Sessions"."user_id"
+
+Ref:"Users"."user_id" < "UserActivities"."user_id"
+
+Ref:"Users"."user_id" < "ContentReports"."user_id"
+
+Ref:"Users"."user_id" < "Messages"."sender_id"
+
+Ref:"Contents"."content_id" < "ContentRecommendations"."content_id"
+
+Ref:"ContentCreators"."creator_id" < "Subscriptions"."creator_id"
+
+Ref:"Users"."user_id" < "UserFollows"."follower_id"
+
+Ref:"Users"."user_id" < "AdClicks"."user_id"
+
+Ref:"Contents"."content_id" < "ContentReports"."content_id"
+
+Ref:"Contents"."content_id" < "Comments"."content_id"
+
+Ref:"Users"."user_id" < "ApiTokens"."user_id"
+
+Ref:"Users"."user_id" < "ContentShares"."user_id"
+
+Ref:"Users"."user_id" < "UserProfiles"."user_id"
+
+Ref:"Advertisements"."ad_id" < "AdImpressions"."ad_id"
+
+Ref:"Users"."user_id" < "IssuesReports"."user_id"
+
+Ref:"Users"."user_id" < "Ratings"."user_id"
+
+Ref:"Users"."user_id" < "Comments"."user_id"
+
+Ref:"Users"."user_id" < "ContentViews"."user_id"
+
+Ref:"Users"."user_id" < "Likes"."user_id"
+
+Ref:"Advertisements"."ad_id" < "AdClicks"."ad_id"
+
+Ref:"Users"."user_id" < "Subscriptions"."user_id"
+
+Ref:"Users"."user_id" < "ContentRecommendations"."user_id"
+
+Ref:"Users"."user_id" < "AdImpressions"."user_id"
+
+Ref:"Users"."user_id" < "UserFollows"."following_id"
+
+Ref:"Users"."user_id" < "Playlists"."user_id"
+
+Ref:"Contents"."content_id" < "PlaylistContents"."content_id"
+
+Ref:"PaymentMethods"."payment_method_id" < "Transactions"."payment_method_id"
+
+Ref:"Contents"."content_id" < "ContentCategories"."content_id"
+
+Ref:"Playlists"."playlist_id" < "PlaylistContents"."playlist_id"
+
+Ref:"Users"."user_id" < "PaymentMethods"."user_id"
+
+Ref:"Users"."user_id" < "Transactions"."user_id"
+
+Ref:"Contents"."content_id" < "ContentAnalytics"."content_id"
+
+Ref:"Contents"."content_id" < "Ratings"."content_id"
+
+Ref:"Tags"."tag_id" < "ContentTags"."tag_id"
+
+Ref:"Categories"."category_id" < "ContentCategories"."category_id"
+
+Ref:"Contents"."content_id" < "ContentShares"."content_id"
+
+Ref:"Users"."user_id" < "Messages"."receiver_id"

@@ -1,0 +1,90 @@
+# PRP Template Structure
+# YAML definition for structured PRP creation
+
+sections:
+  feature_definition:
+    goal:
+      question: "What exactly needs to be built? What's the specific end state you want?"
+      type: text
+      required: true
+    why:
+      question: "What's the business value? Who benefits from this? How does it integrate with existing features?"
+      type: list
+      required: true
+    what:
+      question: "What should users see and be able to do? What are the technical requirements?"
+      type: text
+      required: true
+    success_criteria:
+      question: "How will you know this feature is complete and working correctly?"
+      type: checklist
+      required: true
+
+  context_intelligence:
+    framework:
+      question: "Which framework/version are you using?"
+      type: select
+      options: ["React 19+", "Next.js 15+", "Node.js 20+", "Astro 5+", "Vue 3+", "Nuxt 3+"]
+      auto_detect: true
+    similar_patterns:
+      question: "Are there similar features in the codebase I should reference?"
+      type: file_references
+      required: false
+    documentation:
+      question: "Any official docs, APIs, or external resources I should reference?"
+      type: url_list
+      required: true
+    gotchas:
+      question: "Any specific patterns to follow? Library quirks? Constraints I should know about?"
+      type: text_block
+      required: false
+    structure:
+      question: "What new files will be created? Where should they be placed?"
+      type: file_tree
+      required: true
+
+  implementation:
+    data_models:
+      question: "What data structures are needed? APIs to call? State to manage?"
+      type: typescript_interfaces
+      required: true
+    task_breakdown:
+      question: "How should this be broken into logical steps? Any dependencies?"
+      type: ordered_tasks
+      required: true
+    complexity:
+      question: "Any complex logic? API integrations? Error handling requirements?"
+      type: pseudocode
+      required: false
+    integration:
+      question: "Database changes needed? New API routes? Configuration updates?"
+      type: integration_points
+      required: false
+
+  testing_validation:
+    unit_testing:
+      question: "What specific behaviors need testing? Edge cases? Error conditions?"
+      type: test_cases
+      required: true
+    integration_testing:
+      question: "How should this be tested end-to-end? What user workflows?"
+      type: user_scenarios
+      required: true
+    additional_requirements:
+      question: "Any special requirements? Documentation needs? Deployment considerations?"
+      type: checklist
+      required: false
+
+validation_levels:
+  level_1: "Syntax & Style"
+  level_2: "Unit Testing"
+  level_3: "Integration Testing"
+  level_4: "Production Readiness"
+
+anti_patterns:
+  - "Don't create new patterns when existing ones work"
+  - "Don't skip validation because 'it should work'"
+  - "Don't ignore failing tests - fix them"
+  - "Don't use 'any' type - embrace TypeScript strict mode"
+  - "Don't hardcode values that should be configuration"
+  - "Don't trust external data without validation"

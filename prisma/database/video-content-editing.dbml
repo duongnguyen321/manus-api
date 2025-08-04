@@ -1,0 +1,317 @@
+Table "Logs" {
+  "log_id" int [pk, not null]
+  "user_id" int [not null]
+  "project_id" int [not null]
+  "action" varchar(255) [not null]
+  "log_date" datetime [not null]
+}
+
+Table "Annotations" {
+  "annotation_id" int [pk, not null]
+  "clip_id" int [not null]
+  "annotation_text" text [not null]
+  "timestamp" int [not null]
+}
+
+Table "Shares" {
+  "share_id" int [pk, not null]
+  "project_id" int [not null]
+  "user_id" int [not null]
+  "shared_with_user_id" int [not null]
+  "share_date" datetime [not null]
+}
+
+Table "Profiles" {
+  "profile_id" int [pk, not null]
+  "user_id" int [not null]
+  "bio" text [not null]
+  "profile_picture_url" varchar(255) [not null]
+}
+
+Table "Effects" {
+  "effect_id" int [pk, not null]
+  "clip_id" int [not null]
+  "effect_type" varchar(255) [not null]
+  "parameters" text [not null]
+}
+
+Table "AudioTracks" {
+  "audio_track_id" int [pk, not null]
+  "video_id" int [not null]
+  "audio_url" varchar(255) [not null]
+  "start_time" int [not null]
+  "end_time" int [not null]
+}
+
+Table "AIModels" {
+  "model_id" int [pk, not null]
+  "model_name" varchar(255) [not null]
+  "model_type" varchar(255) [not null]
+  "creation_date" datetime [not null]
+  "last_updated_date" datetime [not null]
+}
+
+Table "Templates" {
+  "template_id" int [pk, not null]
+  "user_id" int [not null]
+  "template_name" varchar(255) [not null]
+  "template_details" text [not null]
+  "creation_date" datetime [not null]
+}
+
+Table "Tasks" {
+  "task_id" int [pk, not null]
+  "project_id" int [not null]
+  "task_name" varchar(255) [not null]
+  "status" varchar(255) [not null]
+  "scheduled_date" datetime [not null]
+}
+
+Table "VideoTags" {
+  "video_id" int [not null]
+  "tag_id" int [not null]
+}
+
+Table "Notifications" {
+  "notification_id" int [pk, not null]
+  "user_id" int [not null]
+  "notification_text" text [not null]
+  "notification_date" datetime [not null]
+}
+
+Table "Transcriptions" {
+  "transcription_id" int [pk, not null]
+  "video_id" int [not null]
+  "transcript" text [not null]
+}
+
+Table "Settings" {
+  "setting_id" int [pk, not null]
+  "user_id" int [not null]
+  "setting_name" varchar(255) [not null]
+  "setting_value" text [not null]
+}
+
+Table "Tags" {
+  "tag_id" int [pk, not null]
+  "tag_name" varchar(255) [not null]
+}
+
+Table "Subscriptions" {
+  "subscription_id" int [pk, not null]
+  "user_id" int [not null]
+  "subscription_type" varchar(255) [not null]
+  "start_date" datetime [not null]
+  "end_date" datetime [not null]
+}
+
+Table "Mentions" {
+  "mention_id" int [pk, not null]
+  "comment_id" int [not null]
+  "mentioned_user_id" int [not null]
+  "mention_date" datetime [not null]
+}
+
+Table "VideoLabels" {
+  "video_id" int [not null]
+  "label_id" int [not null]
+}
+
+Table "Presets" {
+  "preset_id" int [pk, not null]
+  "user_id" int [not null]
+  "preset_name" varchar(255) [not null]
+  "preset_details" text [not null]
+  "creation_date" datetime [not null]
+}
+
+Table "Reactions" {
+  "reaction_id" int [pk, not null]
+  "comment_id" int [not null]
+  "user_id" int [not null]
+  "reaction_type" varchar(50) [not null]
+  "reaction_date" datetime [not null]
+}
+
+Table "Clips" {
+  "clip_id" int [pk, not null]
+  "video_id" int [not null]
+  "start_time" int [not null]
+  "end_time" int [not null]
+  "clip_url" varchar(255) [not null]
+}
+
+Table "Comments" {
+  "comment_id" int [pk, not null]
+  "user_id" int [not null]
+  "video_id" int [not null]
+  "comment_text" text [not null]
+  "comment_date" datetime [not null]
+}
+
+Table "Projects" {
+  "project_id" int [pk, not null]
+  "user_id" int [not null]
+  "project_name" varchar(255) [not null]
+  "creation_date" datetime [not null]
+  "last_modified_date" datetime [not null]
+}
+
+Table "Collaborations" {
+  "collaboration_id" int [pk, not null]
+  "project_id" int [not null]
+  "user_id" int [not null]
+  "role" varchar(255) [not null]
+  "invitation_date" datetime [not null]
+}
+
+Table "Feedback" {
+  "feedback_id" int [pk, not null]
+  "user_id" int [not null]
+  "project_id" int [not null]
+  "feedback_text" text [not null]
+  "feedback_date" datetime [not null]
+}
+
+Table "Analytics" {
+  "analytics_id" int [pk, not null]
+  "video_id" int [not null]
+  "view_count" int [not null]
+  "like_count" int [not null]
+  "comment_count" int [not null]
+  "share_count" int [not null]
+}
+
+Table "Licenses" {
+  "license_id" int [pk, not null]
+  "user_id" int [not null]
+  "license_key" varchar(255) [not null]
+  "issue_date" datetime [not null]
+  "expiration_date" datetime [not null]
+}
+
+Table "Users" {
+  "user_id" int [pk, not null]
+  "username" varchar(255) [not null]
+  "email" varchar(255) [not null]
+  "password_hash" varchar(255) [not null]
+  "registration_date" datetime [not null]
+}
+
+Table "Payments" {
+  "payment_id" int [pk, not null]
+  "user_id" int [not null]
+  "amount" "decimal(10, 2)" [not null]
+  "payment_date" datetime [not null]
+  "payment_method" varchar(255) [not null]
+}
+
+Table "Backups" {
+  "backup_id" int [pk, not null]
+  "project_id" int [not null]
+  "backup_url" varchar(255) [not null]
+  "backup_date" datetime [not null]
+}
+
+Table "Transitions" {
+  "transition_id" int [pk, not null]
+  "from_clip_id" int [not null]
+  "to_clip_id" int [not null]
+  "transition_type" varchar(255) [not null]
+  "duration" int [not null]
+}
+
+Table "Videos" {
+  "video_id" int [pk, not null]
+  "project_id" int [not null]
+  "video_url" varchar(255) [not null]
+  "upload_date" datetime [not null]
+  "description" text [not null]
+}
+
+Table "Labels" {
+  "label_id" int [pk, not null]
+  "user_id" int [not null]
+  "label_name" varchar(255) [not null]
+  "label_color" varchar(7) [not null]
+}
+
+Ref:"Users"."user_id" < "Collaborations"."user_id"
+
+Ref:"Users"."user_id" < "Licenses"."user_id"
+
+Ref:"Clips"."clip_id" < "Effects"."clip_id"
+
+Ref:"Clips"."clip_id" < "Annotations"."clip_id"
+
+Ref:"Users"."user_id" < "Comments"."user_id"
+
+Ref:"Tags"."tag_id" < "VideoTags"."tag_id"
+
+Ref:"Users"."user_id" < "Shares"."shared_with_user_id"
+
+Ref:"Projects"."project_id" < "Backups"."project_id"
+
+Ref:"Users"."user_id" < "Reactions"."user_id"
+
+Ref:"Projects"."project_id" < "Tasks"."project_id"
+
+Ref:"Projects"."project_id" < "Shares"."project_id"
+
+Ref:"Users"."user_id" < "Logs"."user_id"
+
+Ref:"Videos"."video_id" < "VideoLabels"."video_id"
+
+Ref:"Users"."user_id" < "Notifications"."user_id"
+
+Ref:"Videos"."video_id" < "AudioTracks"."video_id"
+
+Ref:"Clips"."clip_id" < "Transitions"."to_clip_id"
+
+Ref:"Videos"."video_id" < "VideoTags"."video_id"
+
+Ref:"Projects"."project_id" < "Collaborations"."project_id"
+
+Ref:"Comments"."comment_id" < "Reactions"."comment_id"
+
+Ref:"Videos"."video_id" < "Clips"."video_id"
+
+Ref:"Videos"."video_id" < "Transcriptions"."video_id"
+
+Ref:"Clips"."clip_id" < "Transitions"."from_clip_id"
+
+Ref:"Projects"."project_id" < "Logs"."project_id"
+
+Ref:"Users"."user_id" < "Templates"."user_id"
+
+Ref:"Videos"."video_id" < "Analytics"."video_id"
+
+Ref:"Users"."user_id" < "Presets"."user_id"
+
+Ref:"Users"."user_id" < "Shares"."user_id"
+
+Ref:"Users"."user_id" < "Mentions"."mentioned_user_id"
+
+Ref:"Projects"."project_id" < "Videos"."project_id"
+
+Ref:"Users"."user_id" < "Labels"."user_id"
+
+Ref:"Users"."user_id" < "Projects"."user_id"
+
+Ref:"Videos"."video_id" < "Comments"."video_id"
+
+Ref:"Users"."user_id" < "Settings"."user_id"
+
+Ref:"Users"."user_id" < "Subscriptions"."user_id"
+
+Ref:"Labels"."label_id" < "VideoLabels"."label_id"
+
+Ref:"Users"."user_id" < "Profiles"."user_id"
+
+Ref:"Projects"."project_id" < "Feedback"."project_id"
+
+Ref:"Users"."user_id" < "Payments"."user_id"
+
+Ref:"Users"."user_id" < "Feedback"."user_id"
+
+Ref:"Comments"."comment_id" < "Mentions"."comment_id"

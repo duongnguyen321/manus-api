@@ -1,0 +1,290 @@
+Table "User_Courses" {
+  "user_id" int
+  "course_id" int
+  "completion_status" user_courses_completion_status_enum
+  "completion_date" date
+}
+
+Table "AI_Chatbot_Interactions" {
+  "interaction_id" int [pk, increment]
+  "user_id" int
+  "message" text
+  "response" text
+  "created_at" timestamp
+}
+
+Table "Career_Progress" {
+  "progress_id" int [pk, increment]
+  "user_id" int
+  "career_id" int
+  "progress_percentage" decimal(5,2)
+  "last_updated" timestamp
+}
+
+Table "Learning_Resources" {
+  "resource_id" int [pk, increment]
+  "title" varchar(255)
+  "url" varchar(255)
+  "category" varchar(255)
+  "skill_id" int
+}
+
+Table "Certifications" {
+  "cert_id" int [pk, increment]
+  "cert_name" varchar(255)
+  "provider" varchar(255)
+  "validity_years" int
+}
+
+Table "User_Skills" {
+  "user_id" int
+  "skill_id" int
+  "proficiency_level" user_skills_proficiency_level_enum
+}
+
+Table "AI_Recommendations" {
+  "recommendation_id" int [pk, increment]
+  "user_id" int
+  "career_id" int
+  "recommendation_score" decimal(5,2)
+  "created_at" timestamp
+}
+
+Table "User_Career_Preferences" {
+  "preference_id" int [pk, increment]
+  "user_id" int
+  "career_id" int
+  "interest_level" user_career_preferences_interest_level_enum
+  "suitability_score" decimal(5,2)
+}
+
+Table "AI_Progress_Tracking" {
+  "tracking_id" int [pk, increment]
+  "user_id" int
+  "recommended_action" text
+  "action_status" ai_progress_tracking_action_status_enum
+}
+
+Table "User_Learning_Resources" {
+  "user_id" int
+  "resource_id" int
+  "progress" user_learning_resources_progress_enum
+}
+
+Table "User_Job_Applications" {
+  "user_id" int
+  "job_id" int
+  "application_status" user_job_applications_application_status_enum
+  "applied_date" date
+}
+
+Table "User_Mentorship" {
+  "user_id" int
+  "mentor_id" int
+  "mentorship_start" date
+  "mentorship_end" date
+}
+
+Table "Notifications" {
+  "notification_id" int [pk, increment]
+  "user_id" int
+  "message" text
+  "status" notifications_status_enum
+  "created_at" timestamp
+}
+
+Table "Assessments" {
+  "assessment_id" int [pk, increment]
+  "title" varchar(255)
+  "description" text
+  "created_at" timestamp
+}
+
+Table "UserCareerPaths" {
+  "UserCareerPathId" int [pk]
+  "UserId" int
+  "CareerPathId" int
+  "StartDate" date
+}
+
+Table "Users" {
+  "user_id" int [pk, increment]
+  "full_name" varchar(255)
+  "email" varchar(255) [unique]
+  "password_hash" varchar(255)
+  "age" int
+  "gender" users_gender_enum
+  "location" varchar(255)
+  "education_level" varchar(255)
+  "experience_level" varchar(255)
+  "created_at" timestamp
+}
+
+Table "User_Assessments" {
+  "user_id" int
+  "assessment_id" int
+  "score" decimal(5,2)
+  "completed_at" timestamp
+}
+
+Table "Courses" {
+  "course_id" int [pk, increment]
+  "title" varchar(255)
+  "provider" varchar(255)
+  "duration_weeks" int
+  "difficulty" courses_difficulty_enum
+  "career_id" int
+}
+
+Table "Mentors" {
+  "mentor_id" int [pk, increment]
+  "full_name" varchar(255)
+  "expertise" varchar(255)
+  "industry" varchar(255)
+  "years_experience" int
+}
+
+Table "Careers" {
+  "career_id" int [pk, increment]
+  "career_name" varchar(255) [unique]
+  "industry" varchar(255)
+  "average_salary" decimal(10,2)
+  "growth_rate" decimal(5,2)
+  "description" text
+}
+
+Table "Skills" {
+  "skill_id" int [pk, increment]
+  "skill_name" varchar(255) [unique]
+  "category" varchar(255)
+}
+
+Table "User_Certifications" {
+  "user_id" int
+  "cert_id" int
+  "obtained_date" date
+  "expiration_date" date
+}
+
+Table "UserResourceEngagements" {
+  "EngagementId" int [pk]
+  "UserId" int
+  "ResourceId" int
+  "EngagementDate" date
+  "Feedback" text
+}
+
+Table "Job_Opportunities" {
+  "job_id" int [pk, increment]
+  "title" varchar(255)
+  "company" varchar(255)
+  "location" varchar(255)
+  "career_id" int
+}
+
+Table "UserFeedbacks" {
+  "FeedbackId" int [pk]
+  "UserId" int
+  "FeedbackContent" text
+  "FeedbackDate" date
+}
+
+Table "User_Feedback" {
+  "feedback_id" int [pk, increment]
+  "user_id" int
+  "feedback_text" text
+  "rating" int
+  "created_at" timestamp
+}
+
+Table "Career_Paths" {
+  "path_id" int [pk, increment]
+  "user_id" int
+  "career_id" int
+  "path_status" career_paths_path_status_enum
+  "created_at" timestamp
+}
+
+Table "AI_Predictive_Analytics" {
+  "analytics_id" int [pk, increment]
+  "user_id" int
+  "predicted_career" varchar(255)
+  "confidence_score" decimal(5,2)
+}
+
+Table "CareerPaths" {
+  "CareerPathId" int [pk]
+  "PathName" varchar(100)
+  "Description" text
+  "Steps" text
+}
+
+Table "Career_Skills" {
+  "career_id" int
+  "skill_id" int
+  "importance_level" career_skills_importance_level_enum
+}
+
+Ref:"Users"."user_id" < "User_Feedback"."user_id"
+
+Ref:"Skills"."skill_id" < "User_Skills"."skill_id"
+
+Ref:"Users"."user_id" < "Career_Progress"."user_id"
+
+Ref:"Users"."user_id" < "Notifications"."user_id"
+
+Ref:"Users"."user_id" < "User_Skills"."user_id"
+
+Ref:"Users"."user_id" < "User_Career_Preferences"."user_id"
+
+Ref:"Skills"."skill_id" < "Learning_Resources"."skill_id"
+
+Ref:"Careers"."career_id" < "AI_Recommendations"."career_id"
+
+Ref:"Users"."user_id" < "User_Job_Applications"."user_id"
+
+Ref:"Certifications"."cert_id" < "User_Certifications"."cert_id"
+
+Ref:"Careers"."career_id" < "Career_Paths"."career_id"
+
+Ref:"Careers"."career_id" < "User_Career_Preferences"."career_id"
+
+Ref:"Mentors"."mentor_id" < "User_Mentorship"."mentor_id"
+
+Ref:"Users"."user_id" < "AI_Progress_Tracking"."user_id"
+
+Ref:"Users"."user_id" < "AI_Predictive_Analytics"."user_id"
+
+Ref:"Users"."user_id" < "User_Mentorship"."user_id"
+
+Ref:"Careers"."career_id" < "Career_Progress"."career_id"
+
+Ref:"Users"."user_id" < "AI_Recommendations"."user_id"
+
+Ref:"Users"."user_id" < "User_Learning_Resources"."user_id"
+
+Ref:"Users"."user_id" < "AI_Chatbot_Interactions"."user_id"
+
+Ref:"Careers"."career_id" < "Courses"."career_id"
+
+Ref:"Careers"."career_id" < "Career_Skills"."career_id"
+
+Ref:"Skills"."skill_id" < "Career_Skills"."skill_id"
+
+Ref:"Careers"."career_id" < "Job_Opportunities"."career_id"
+
+Ref:"Users"."user_id" < "Career_Paths"."user_id"
+
+Ref:"Users"."user_id" < "User_Assessments"."user_id"
+
+Ref:"Users"."user_id" < "User_Courses"."user_id"
+
+Ref:"Job_Opportunities"."job_id" < "User_Job_Applications"."job_id"
+
+Ref:"Users"."user_id" < "User_Certifications"."user_id"
+
+Ref:"Courses"."course_id" < "User_Courses"."course_id"
+
+Ref:"Learning_Resources"."resource_id" < "User_Learning_Resources"."resource_id"
+
+Ref:"Assessments"."assessment_id" < "User_Assessments"."assessment_id"

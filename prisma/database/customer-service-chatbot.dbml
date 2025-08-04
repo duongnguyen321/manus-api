@@ -1,0 +1,242 @@
+Table "TrainingData" {
+  "TrainingID" int [pk, increment]
+  "Intent" varchar(100)
+  "ExampleQuestion" text
+  "ExampleResponse" text
+  "CreatedAt" timestamp
+}
+
+Table "UserSearchHistory" {
+  "HistoryID" int [pk, increment]
+  "UserID" int
+  "SearchQuery" varchar(200)
+  "SearchedAt" timestamp
+}
+
+Table "Messages" {
+  "MessageID" int [pk, increment]
+  "ConversationID" int
+  "Sender" messages_sender_enum
+  "MessageText" text
+  "SentAt" timestamp
+}
+
+Table "SecurityQuestions" {
+  "QuestionID" int [pk, increment]
+  "UserID" int
+  "QuestionText" varchar(200)
+  "AnswerHash" varchar(200)
+}
+
+Table "Notifications" {
+  "NotificationID" int [pk, increment]
+  "UserID" int
+  "NotificationText" text
+  "IsRead" boolean
+  "SentAt" timestamp
+}
+
+Table "APILogs" {
+  "APILogID" int [pk, increment]
+  "APIKeyID" int
+  "Endpoint" varchar(200)
+  "RequestPayload" text
+  "ResponsePayload" text
+  "LoggedAt" timestamp
+}
+
+Table "IntentsEntities" {
+  "ID" int [pk, increment]
+  "TrainingID" int
+  "EntityID" int
+}
+
+Table "UserProfiles" {
+  "ProfileID" int [pk, increment]
+  "UserID" int
+  "LanguagePreference" varchar(50)
+  "TimeZone" varchar(50)
+  "OptInMarketing" boolean
+}
+
+Table "KnowledgeBaseCategories" {
+  "CategoryID" int [pk, increment]
+  "Name" varchar(100)
+  "ParentCategoryID" int
+}
+
+Table "ScheduledTasks" {
+  "TaskID" int [pk, increment]
+  "TaskName" varchar(100)
+  "ScheduleExpression" varchar(100)
+  "Status" scheduledtasks_status_enum
+  "LastRunAt" timestamp
+}
+
+Table "ChatbotResponses" {
+  "ResponseID" int [pk, increment]
+  "MessageID" int
+  "BotResponseText" text
+  "ResponseType" chatbotresponses_responsetype_enum
+  "ConfidenceScore" decimal(5,2)
+}
+
+Table "ErrorLogs" {
+  "LogID" int [pk, increment]
+  "ErrorMessage" text
+  "ErrorType" errorlogs_errortype_enum
+  "LoggedAt" timestamp
+}
+
+Table "APIKeys" {
+  "APIKeyID" int [pk, increment]
+  "Key" varchar(200) [unique]
+  "OwnerName" varchar(100)
+  "CreatedAt" timestamp
+  "ExpiresAt" timestamp
+}
+
+Table "Entities" {
+  "EntityID" int [pk, increment]
+  "Name" varchar(100)
+  "Type" varchar(50)
+  "ValuePattern" varchar(200)
+}
+
+Table "TaskLogs" {
+  "TaskLogID" int [pk, increment]
+  "TaskID" int
+  "LogMessage" text
+  "LoggedAt" timestamp
+}
+
+Table "ConversationAnalytics" {
+  "AnalyticsID" int [pk, increment]
+  "ConversationID" int
+  "ResponseTimeAvg" decimal(10,2)
+  "UserEngagementScore" decimal(10,2)
+}
+
+Table "AuditLogs" {
+  "AuditLogID" int [pk, increment]
+  "UserID" int
+  "Action" varchar(200)
+  "PerformedAt" timestamp
+}
+
+Table "Feedback" {
+  "FeedbackID" int [pk, increment]
+  "ResponseID" int
+  "UserID" int
+  "Rating" int
+  "Comment" text
+  "SubmittedAt" timestamp
+}
+
+Table "BotProfiles" {
+  "BotID" int [pk, increment]
+  "BotName" varchar(100)
+  "Version" varchar(20)
+  "CreatedAt" timestamp
+}
+
+Table "UserAuth" {
+  "AuthID" int [pk, increment]
+  "UserID" int
+  "PasswordHash" varchar(200)
+  "LastLogin" timestamp
+  "FailedAttempts" int
+}
+
+Table "KnowledgeBaseArticles" {
+  "ArticleID" int [pk, increment]
+  "Title" varchar(200)
+  "Content" text
+  "Tags" varchar(200)
+  "CreatedAt" timestamp
+}
+
+Table "Users" {
+  "UserID" int [pk, increment]
+  "UserName" varchar(100)
+  "Email" varchar(100) [unique]
+  "PhoneNumber" varchar(20)
+  "CreatedAt" timestamp
+}
+
+Table "Conversations" {
+  "ConversationID" int [pk, increment]
+  "UserID" int
+  "StartedAt" timestamp
+  "EndedAt" timestamp
+  "Status" conversations_status_enum
+}
+
+Table "BotTrainingSessions" {
+  "TrainingSessionID" int [pk, increment]
+  "BotID" int
+  "StartedAt" timestamp
+  "EndedAt" timestamp
+  "Status" bottrainingsessions_status_enum
+}
+
+Table "SystemSettings" {
+  "SettingID" int [pk, increment]
+  "Key" varchar(100) [unique]
+  "Value" varchar(500)
+}
+
+Table "ArticleCategoryMappings" {
+  "MappingID" int [pk, increment]
+  "ArticleID" int
+  "CategoryID" int
+}
+
+Table "UserPreferences" {
+  "PreferenceID" int [pk, increment]
+  "UserID" int
+  "PreferenceKey" varchar(100)
+  "PreferenceValue" varchar(500)
+}
+
+Ref:"Users"."UserID" < "SecurityQuestions"."UserID"
+
+Ref:"KnowledgeBaseArticles"."ArticleID" < "ArticleCategoryMappings"."ArticleID"
+
+Ref:"Users"."UserID" < "Conversations"."UserID"
+
+Ref:"ScheduledTasks"."TaskID" < "TaskLogs"."TaskID"
+
+Ref:"Entities"."EntityID" < "IntentsEntities"."EntityID"
+
+Ref:"KnowledgeBaseCategories"."CategoryID" < "KnowledgeBaseCategories"."ParentCategoryID"
+
+Ref:"TrainingData"."TrainingID" < "IntentsEntities"."TrainingID"
+
+Ref:"Users"."UserID" < "UserAuth"."UserID"
+
+Ref:"Messages"."MessageID" < "ChatbotResponses"."MessageID"
+
+Ref:"Users"."UserID" < "Feedback"."UserID"
+
+Ref:"KnowledgeBaseCategories"."CategoryID" < "ArticleCategoryMappings"."CategoryID"
+
+Ref:"Users"."UserID" < "UserSearchHistory"."UserID"
+
+Ref:"Users"."UserID" < "UserPreferences"."UserID"
+
+Ref:"BotProfiles"."BotID" < "BotTrainingSessions"."BotID"
+
+Ref:"Users"."UserID" < "Notifications"."UserID"
+
+Ref:"Conversations"."ConversationID" < "Messages"."ConversationID"
+
+Ref:"ChatbotResponses"."ResponseID" < "Feedback"."ResponseID"
+
+Ref:"Users"."UserID" < "UserProfiles"."UserID"
+
+Ref:"Conversations"."ConversationID" < "ConversationAnalytics"."ConversationID"
+
+Ref:"APIKeys"."APIKeyID" < "APILogs"."APIKeyID"
+
+Ref:"Users"."UserID" < "AuditLogs"."UserID"

@@ -1,0 +1,264 @@
+Table "LearningPaths" {
+  "path_id" int [pk, not null]
+  "path_title" varchar(100) [not null]
+  "path_description" text [not null]
+  "creator_user_id" int [not null]
+}
+
+Table "ChallengeSubmissions" {
+  "submission_id" int [pk, not null]
+  "challenge_id" int [not null]
+  "user_id" int [not null]
+  "submission_content" text [not null]
+  "submission_date" datetime [not null]
+}
+
+Table "Lesson_Progress" {
+  "progress_id" int [pk, increment]
+  "user_id" int
+  "lesson_id" int
+  "completed" boolean
+}
+
+Table "Quizzes" {
+  "quiz_id" int [pk, increment]
+  "course_id" int
+  "title" varchar(255) [not null]
+}
+
+Table "Feedback" {
+  "feedback_id" int [pk, not null]
+  "user_id" int [not null]
+  "course_id" int [not null]
+  "feedback_text" text [not null]
+  "rating" int [not null]
+  "feedback_date" datetime [not null]
+}
+
+Table "Answers" {
+  "answer_id" int [pk, increment]
+  "question_id" int
+  "answer_text" text [not null]
+  "is_correct" boolean
+}
+
+Table "Users" {
+  "user_id" int [pk, increment]
+  "name" varchar(255) [not null]
+  "email" varchar(255) [unique, not null]
+  "password_hash" varchar(255) [not null]
+  "role" users_role_enum [not null]
+  "created_at" timestamp
+}
+
+Table "Lessons" {
+  "lesson_id" int [pk, increment]
+  "module_id" int
+  "title" varchar(255) [not null]
+  "content" text
+  "video_url" varchar(255)
+}
+
+Table "Course_Progress" {
+  "progress_id" int [pk, increment]
+  "user_id" int
+  "course_id" int
+  "completion_percentage" decimal(5,2)
+  "last_accessed" timestamp
+}
+
+Table "Certificates" {
+  "certificate_id" int [pk, increment]
+  "user_id" int
+  "course_id" int
+  "issue_date" timestamp
+}
+
+Table "AIRecommendations" {
+  "recommendation_id" int [pk, not null]
+  "model_id" int [not null]
+  "user_id" int [not null]
+  "recommended_courses" text [not null]
+  "recommendation_date" datetime [not null]
+}
+
+Table "Messages" {
+  "message_id" int [pk, not null]
+  "from_user_id" int [not null]
+  "to_user_id" int [not null]
+  "message_content" text [not null]
+  "sent_date" datetime [not null]
+}
+
+Table "Subscription_Plans" {
+  "plan_id" int [pk, increment]
+  "name" varchar(255) [not null]
+  "price" decimal(10,2)
+  "duration_days" int [not null]
+}
+
+Table "User_Profiles" {
+  "user_id" int [pk]
+  "bio" text
+  "profile_picture" varchar(255)
+  "interests" text
+}
+
+Table "Questions" {
+  "question_id" int [pk, increment]
+  "quiz_id" int
+  "question_text" text [not null]
+  "question_type" questions_question_type_enum [not null]
+}
+
+Table "User_Subscriptions" {
+  "subscription_id" int [pk, increment]
+  "user_id" int
+  "plan_id" int
+  "start_date" timestamp
+  "end_date" timestamp
+}
+
+Table "Achievements" {
+  "achievement_id" int [pk, increment]
+  "user_id" int
+  "title" varchar(255) [not null]
+  "description" text
+  "achieved_at" timestamp
+}
+
+Table "User_Quiz_Attempts" {
+  "attempt_id" int [pk, increment]
+  "user_id" int
+  "quiz_id" int
+  "score" decimal(5,2)
+  "attempt_date" timestamp
+}
+
+Table "AI_Performance_Reports" {
+  "report_id" int [pk, increment]
+  "user_id" int
+  "insights" text
+  "generated_at" timestamp
+}
+
+Table "AIModels" {
+  "model_id" int [pk, not null]
+  "model_name" varchar(100) [not null]
+  "model_description" text [not null]
+  "deployment_date" datetime [not null]
+}
+
+Table "Transactions" {
+  "transaction_id" int [pk, increment]
+  "user_id" int
+  "amount" decimal(10,2)
+  "payment_method" varchar(50)
+  "transaction_date" timestamp
+}
+
+Table "Discussions" {
+  "discussion_id" int [pk, increment]
+  "course_id" int
+  "user_id" int
+  "topic" varchar(255) [not null]
+  "created_at" timestamp
+}
+
+Table "AI_Recommendations" {
+  "recommendation_id" int [pk, increment]
+  "user_id" int
+  "course_id" int
+  "confidence_score" decimal(5,2)
+  "reason" text
+}
+
+Table "PathCourses" {
+  "path_course_id" int [pk, not null]
+  "path_id" int [not null]
+  "course_id" int [not null]
+}
+
+Table "Courses" {
+  "course_id" int [pk, increment]
+  "title" varchar(255) [not null]
+  "description" text
+  "instructor_id" int
+  "created_at" timestamp
+}
+
+Table "Modules" {
+  "module_id" int [pk, increment]
+  "course_id" int
+  "title" varchar(255) [not null]
+  "description" text
+}
+
+Table "Comments" {
+  "comment_id" int [pk, increment]
+  "discussion_id" int
+  "user_id" int
+  "comment_text" text [not null]
+  "created_at" timestamp
+}
+
+Table "User_Analytics" {
+  "analytics_id" int [pk, increment]
+  "user_id" int
+  "engagement_score" decimal(5,2)
+  "last_active" timestamp
+}
+
+Ref:"Users"."user_id" < "Transactions"."user_id"
+
+Ref:"Courses"."course_id" < "AI_Recommendations"."course_id"
+
+Ref:"Users"."user_id" < "AI_Recommendations"."user_id"
+
+Ref:"Quizzes"."quiz_id" < "User_Quiz_Attempts"."quiz_id"
+
+Ref:"Users"."user_id" < "Courses"."instructor_id"
+
+Ref:"Courses"."course_id" < "Course_Progress"."course_id"
+
+Ref:"Users"."user_id" < "Course_Progress"."user_id"
+
+Ref:"Users"."user_id" < "User_Analytics"."user_id"
+
+Ref:"Users"."user_id" < "AI_Performance_Reports"."user_id"
+
+Ref:"Users"."user_id" < "Comments"."user_id"
+
+Ref:"Modules"."module_id" < "Lessons"."module_id"
+
+Ref:"Courses"."course_id" < "Certificates"."course_id"
+
+Ref:"Discussions"."discussion_id" < "Comments"."discussion_id"
+
+Ref:"Users"."user_id" < "User_Subscriptions"."user_id"
+
+Ref:"Courses"."course_id" < "Modules"."course_id"
+
+Ref:"Subscription_Plans"."plan_id" < "User_Subscriptions"."plan_id"
+
+Ref:"Users"."user_id" < "Achievements"."user_id"
+
+Ref:"Questions"."question_id" < "Answers"."question_id"
+
+Ref:"Quizzes"."quiz_id" < "Questions"."quiz_id"
+
+Ref:"Users"."user_id" < "Discussions"."user_id"
+
+Ref:"Users"."user_id" < "Certificates"."user_id"
+
+Ref:"Lessons"."lesson_id" < "Lesson_Progress"."lesson_id"
+
+Ref:"Courses"."course_id" < "Discussions"."course_id"
+
+Ref:"Courses"."course_id" < "Quizzes"."course_id"
+
+Ref:"Users"."user_id" < "User_Profiles"."user_id"
+
+Ref:"Users"."user_id" < "Lesson_Progress"."user_id"
+
+Ref:"Users"."user_id" < "User_Quiz_Attempts"."user_id"

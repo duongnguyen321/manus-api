@@ -1,0 +1,272 @@
+Table "UserPreferences" {
+  "PreferenceID" int [pk, not null]
+  "PreferenceUserID" int [not null]
+  "PreferenceKey" varchar(255) [not null]
+  "PreferenceValue" text [not null]
+}
+
+Table "Templates" {
+  "TemplateID" int [pk, not null]
+  "TemplateUserID" int [not null]
+  "TemplateName" varchar(255) [not null]
+  "TemplateContent" text [not null]
+}
+
+Table "GroupContacts" {
+  "GroupID" int [pk, not null]
+  "GroupName" varchar(255) [not null]
+  "GroupDescription" varchar(255)
+}
+
+Table "CalendarEvents" {
+  "EventID" int [pk, not null]
+  "EventUserID" int [not null]
+  "EventTitle" varchar(255) [not null]
+  "EventDescription" varchar(255)
+  "EventStart" timestamp [not null]
+  "EventEnd" timestamp [not null]
+}
+
+Table "EmailFilters" {
+  "FilterID" int [pk, not null]
+  "FilterUserID" int [not null]
+  "FilterName" varchar(255) [not null]
+  "FilterCriteria" text [not null]
+}
+
+Table "EmailAttachments" {
+  "AttachmentID" int [pk, not null]
+  "AttachmentMessageID" int [not null]
+  "AttachmentFileName" varchar(255) [not null]
+  "AttachmentFileType" varchar(50) [not null]
+  "AttachmentFileSize" int [not null]
+}
+
+Table "ArchivedEmails" {
+  "ArchiveID" int [pk, not null]
+  "ArchiveUserID" int [not null]
+  "ArchiveMessageID" int [not null]
+  "ArchiveDate" timestamp [not null]
+}
+
+Table "EmailTags" {
+  "EmailTagID" int [pk, not null]
+  "EmailTagMessageID" int [not null]
+  "TagID" int [not null]
+}
+
+Table "UserRoles" {
+  "RoleID" int [pk, not null]
+  "RoleName" varchar(100) [not null]
+  "RoleDescription" varchar(255)
+}
+
+Table "Notifications" {
+  "NotificationID" int [pk, not null]
+  "NotificationUserID" int [not null]
+  "NotificationMessage" varchar(255) [not null]
+  "NotificationTimestamp" timestamp [not null]
+}
+
+Table "EmailQuarantine" {
+  "QuarantineID" int [pk, not null]
+  "QuarantineMessageID" int [not null]
+  "QuarantineReason" varchar(255) [not null]
+  "QuarantineDate" timestamp [not null]
+}
+
+Table "Tags" {
+  "TagID" int [pk, not null]
+  "TagUserID" int [not null]
+  "TagName" varchar(255) [not null]
+}
+
+Table "FolderMessages" {
+  "FolderMessageID" int [pk, not null]
+  "FolderID" int [not null]
+  "MessageID" int [not null]
+}
+
+Table "BackupSettings" {
+  "BackupSettingID" int [pk, not null]
+  "BackupUserID" int [not null]
+  "BackupFrequency" varchar(255) [not null]
+  "BackupType" varchar(255) [not null]
+}
+
+Table "UserRoleMapping" {
+  "MappingID" int [pk, not null]
+  "RoleMappingUserID" int [not null]
+  "RoleMappingRoleID" int [not null]
+}
+
+Table "EmailAccounts" {
+  "AccountID" int [pk, not null]
+  "AccountUserID" int [not null]
+  "AccountProvider" varchar(255) [not null]
+  "AccountEmailAddress" varchar(255) [not null]
+  "AccountPassword" varchar(255) [not null]
+}
+
+Table "EmailMessages" {
+  "MessageID" int [pk, not null]
+  "MessageAccountID" int [not null]
+  "MessageSubject" varchar(255) [not null]
+  "MessageBody" text [not null]
+  "MessageDate" timestamp [not null]
+}
+
+Table "Contacts" {
+  "ContactID" int [pk, not null]
+  "ContactUserID" int [not null]
+  "ContactName" varchar(255) [not null]
+  "ContactEmail" varchar(255) [not null]
+}
+
+Table "EmailRules" {
+  "RuleID" int [pk, not null]
+  "RuleFilterID" int [not null]
+  "RuleAction" varchar(255) [not null]
+}
+
+Table "LogEntries" {
+  "LogID" int [pk, not null]
+  "LogUserID" int [not null]
+  "LogAction" varchar(255) [not null]
+  "LogTimestamp" timestamp [not null]
+}
+
+Table "SpamFilters" {
+  "SpamFilterID" int [pk, not null]
+  "SpamFilterUserID" int [not null]
+  "SpamFilterCriteria" text [not null]
+}
+
+Table "APIKeys" {
+  "ApiKeyID" int [pk, not null]
+  "ApiKeyUserID" int [not null]
+  "ApiKeyValue" varchar(255) [not null]
+  "KeyCreationDate" timestamp [not null]
+}
+
+Table "EventAttendants" {
+  "AttendantID" int [pk, not null]
+  "EventID" int [not null]
+  "AttendantUserID" int [not null]
+  "AttendantStatus" varchar(100) [not null]
+}
+
+Table "GroupMemberMapping" {
+  "MemberMappingID" int [pk, not null]
+  "GroupID" int [not null]
+  "ContactID" int [not null]
+}
+
+Table "DraftMessages" {
+  "DraftID" int [pk, not null]
+  "DraftAccountID" int [not null]
+  "DraftSubject" varchar(255)
+  "DraftBody" text
+}
+
+Table "ExternalIntegrations" {
+  "IntegrationID" int [pk, not null]
+  "IntegrationUserID" int [not null]
+  "IntegrationName" varchar(255) [not null]
+  "IntegrationDetails" text [not null]
+}
+
+Table "Folders" {
+  "FolderID" int [pk, not null]
+  "FolderUserID" int [not null]
+  "FolderName" varchar(255) [not null]
+}
+
+Table "ImportantEmails" {
+  "ImportantEmailID" int [pk, not null]
+  "ImportantMessageID" int [not null]
+  "ImportantUserID" int [not null]
+}
+
+Table "DeviceSessions" {
+  "SessionID" int [pk, not null]
+  "SessionUserID" int [not null]
+  "DeviceName" varchar(255) [not null]
+  "SessionStart" timestamp [not null]
+  "SessionEnd" timestamp
+}
+
+Table "Users" {
+  "UserID" int [pk, not null]
+  "UserName" varchar(255) [not null]
+  "UserEmail" varchar(255) [not null]
+  "UserPassword" varchar(255) [not null]
+}
+
+Ref:"Users"."UserID" < "UserPreferences"."PreferenceUserID"
+
+Ref:"EmailMessages"."MessageID" < "ArchivedEmails"."ArchiveMessageID"
+
+Ref:"Folders"."FolderID" < "FolderMessages"."FolderID"
+
+Ref:"Contacts"."ContactID" < "GroupMemberMapping"."ContactID"
+
+Ref:"Users"."UserID" < "UserRoleMapping"."RoleMappingUserID"
+
+Ref:"UserRoles"."RoleID" < "UserRoleMapping"."RoleMappingRoleID"
+
+Ref:"EmailMessages"."MessageID" < "FolderMessages"."MessageID"
+
+Ref:"Users"."UserID" < "Notifications"."NotificationUserID"
+
+Ref:"EmailAccounts"."AccountID" < "EmailMessages"."MessageAccountID"
+
+Ref:"Users"."UserID" < "Templates"."TemplateUserID"
+
+Ref:"Users"."UserID" < "LogEntries"."LogUserID"
+
+Ref:"EmailMessages"."MessageID" < "ImportantEmails"."ImportantMessageID"
+
+Ref:"Users"."UserID" < "EventAttendants"."AttendantUserID"
+
+Ref:"Users"."UserID" < "BackupSettings"."BackupUserID"
+
+Ref:"EmailMessages"."MessageID" < "EmailQuarantine"."QuarantineMessageID"
+
+Ref:"Users"."UserID" < "ExternalIntegrations"."IntegrationUserID"
+
+Ref:"Users"."UserID" < "CalendarEvents"."EventUserID"
+
+Ref:"Users"."UserID" < "APIKeys"."ApiKeyUserID"
+
+Ref:"EmailFilters"."FilterID" < "EmailRules"."RuleFilterID"
+
+Ref:"Users"."UserID" < "EmailFilters"."FilterUserID"
+
+Ref:"EmailMessages"."MessageID" < "EmailAttachments"."AttachmentMessageID"
+
+Ref:"Users"."UserID" < "Folders"."FolderUserID"
+
+Ref:"Users"."UserID" < "ArchivedEmails"."ArchiveUserID"
+
+Ref:"EmailAccounts"."AccountID" < "DraftMessages"."DraftAccountID"
+
+Ref:"Users"."UserID" < "EmailAccounts"."AccountUserID"
+
+Ref:"GroupContacts"."GroupID" < "GroupMemberMapping"."GroupID"
+
+Ref:"CalendarEvents"."EventID" < "EventAttendants"."EventID"
+
+Ref:"Users"."UserID" < "ImportantEmails"."ImportantUserID"
+
+Ref:"Tags"."TagID" < "EmailTags"."TagID"
+
+Ref:"EmailMessages"."MessageID" < "EmailTags"."EmailTagMessageID"
+
+Ref:"Users"."UserID" < "SpamFilters"."SpamFilterUserID"
+
+Ref:"Users"."UserID" < "Contacts"."ContactUserID"
+
+Ref:"Users"."UserID" < "Tags"."TagUserID"
+
+Ref:"Users"."UserID" < "DeviceSessions"."SessionUserID"
