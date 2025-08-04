@@ -13,6 +13,8 @@ import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@ne
 import { QueueService, QueueJobData } from './queue.service';
 import { AuthGuard } from '../auth/guards/Auth.guard';
 import { Public } from '../auth/decorators/public.decorator';
+import { ApiResponseDto } from '@/common/classes/response.dto';
+import { ApiMessageKey } from '@/common/constants/message.constants';
 
 @ApiTags('Queue Management')
 @Controller('queue')
@@ -27,9 +29,13 @@ export class QueueController {
   })
   @ApiResponse({ status: 201, description: 'Chat job added successfully' })
   @ApiResponse({ status: 400, description: 'Bad request' })
-  async addChatJob(@Body() data: QueueJobData): Promise<{ jobId: string }> {
+  async addChatJob(@Body() data: QueueJobData): Promise<ApiResponseDto<{ jobId: string }>> {
     const job = await this.queueService.addChatProcessingJob(data);
-    return { jobId: job.id.toString() };
+    return new ApiResponseDto({
+      statusCode: HttpStatus.CREATED,
+      data: { jobId: job.id.toString() },
+      message: ApiMessageKey.QUEUE_JOB_CREATED_SUCCESS
+    });
   }
 
   @Post('generate/:type')
@@ -48,9 +54,13 @@ export class QueueController {
   async addGenerationJob(
     @Param('type') type: 'text' | 'code' | 'image',
     @Body() data: QueueJobData,
-  ): Promise<{ jobId: string }> {
+  ): Promise<ApiResponseDto<{ jobId: string }>> {
     const job = await this.queueService.addGenerationJob(type, data);
-    return { jobId: job.id.toString() };
+    return new ApiResponseDto({
+      statusCode: HttpStatus.CREATED,
+      data: { jobId: job.id.toString() },
+      message: ApiMessageKey.QUEUE_JOB_CREATED_SUCCESS
+    });
   }
 
   @Post('browser')
@@ -61,9 +71,13 @@ export class QueueController {
   })
   @ApiResponse({ status: 201, description: 'Browser job added successfully' })
   @ApiResponse({ status: 400, description: 'Bad request' })
-  async addBrowserJob(@Body() data: QueueJobData): Promise<{ jobId: string }> {
+  async addBrowserJob(@Body() data: QueueJobData): Promise<ApiResponseDto<{ jobId: string }>> {
     const job = await this.queueService.addBrowserAutomationJob(data);
-    return { jobId: job.id.toString() };
+    return new ApiResponseDto({
+      statusCode: HttpStatus.CREATED,
+      data: { jobId: job.id.toString() },
+      message: ApiMessageKey.QUEUE_JOB_CREATED_SUCCESS
+    });
   }
 
   @Post('edit')
@@ -74,9 +88,13 @@ export class QueueController {
   })
   @ApiResponse({ status: 201, description: 'Edit job added successfully' })
   @ApiResponse({ status: 400, description: 'Bad request' })
-  async addEditJob(@Body() data: QueueJobData): Promise<{ jobId: string }> {
+  async addEditJob(@Body() data: QueueJobData): Promise<ApiResponseDto<{ jobId: string }>> {
     const job = await this.queueService.addEditJob(data);
-    return { jobId: job.id.toString() };
+    return new ApiResponseDto({
+      statusCode: HttpStatus.CREATED,
+      data: { jobId: job.id.toString() },
+      message: ApiMessageKey.QUEUE_JOB_CREATED_SUCCESS
+    });
   }
 
   @Post('system')
@@ -88,9 +106,13 @@ export class QueueController {
   })
   @ApiResponse({ status: 201, description: 'System job added successfully' })
   @ApiResponse({ status: 400, description: 'Bad request' })
-  async addSystemJob(@Body() data: QueueJobData): Promise<{ jobId: string }> {
+  async addSystemJob(@Body() data: QueueJobData): Promise<ApiResponseDto<{ jobId: string }>> {
     const job = await this.queueService.addSystemJob(data);
-    return { jobId: job.id.toString() };
+    return new ApiResponseDto({
+      statusCode: HttpStatus.CREATED,
+      data: { jobId: job.id.toString() },
+      message: ApiMessageKey.QUEUE_JOB_CREATED_SUCCESS
+    });
   }
 
   @Get('job/:jobId')
@@ -102,8 +124,13 @@ export class QueueController {
   @ApiParam({ name: 'jobId', description: 'Job ID' })
   @ApiResponse({ status: 200, description: 'Job status retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Job not found' })
-  async getJobStatus(@Param('jobId') jobId: string): Promise<any> {
-    return this.queueService.getJobStatus(jobId);
+  async getJobStatus(@Param('jobId') jobId: string): Promise<ApiResponseDto<any>> {
+    const jobStatus = await this.queueService.getJobStatus(jobId);
+    return new ApiResponseDto({
+      statusCode: HttpStatus.OK,
+      data: jobStatus,
+      message: ApiMessageKey.QUEUE_JOB_STATUS_RETRIEVED_SUCCESS
+    });
   }
 
   @Get('session/:sessionId')
@@ -114,8 +141,13 @@ export class QueueController {
   })
   @ApiParam({ name: 'sessionId', description: 'Session ID' })
   @ApiResponse({ status: 200, description: 'Session jobs retrieved successfully' })
-  async getSessionJobs(@Param('sessionId') sessionId: string): Promise<any[]> {
-    return this.queueService.getSessionJobs(sessionId);
+  async getSessionJobs(@Param('sessionId') sessionId: string): Promise<ApiResponseDto<any[]>> {
+    const sessionJobs = await this.queueService.getSessionJobs(sessionId);
+    return new ApiResponseDto({
+      statusCode: HttpStatus.OK,
+      data: sessionJobs,
+      message: ApiMessageKey.QUEUE_SESSION_JOBS_RETRIEVED_SUCCESS
+    });
   }
 
   @Post('job/:jobId/pause')
@@ -172,6 +204,11 @@ export class QueueController {
   })
   @ApiResponse({ status: 200, description: 'Queue statistics retrieved successfully' })
   async getQueueStats(): Promise<any> {
-    return this.queueService.getQueueStats();
+    const stats = await this.queueService.getQueueStats();
+    return new ApiResponseDto({
+      statusCode: HttpStatus.OK,
+      data: stats,
+      message: ApiMessageKey.QUEUE_STATS_RETRIEVED_SUCCESS
+    });
   }
 }

@@ -46,10 +46,6 @@ export class SimpleChatDto {
 	sessionId?: string;
 }
 
-export class CreateSessionDto {
-	// Empty body for session creation
-}
-
 @ApiTags('Simple AI API')
 @Controller('simple')
 @UseGuards(AuthGuard)
@@ -63,7 +59,6 @@ export class SimpleController {
 		description:
 			'Create a new session for streamlined AI interaction. Session automatically manages Docker containers and browser contexts.',
 	})
-	@ApiBody({ type: CreateSessionDto })
 	@ApiResponse({
 		status: 200,
 		description: 'Session created successfully',

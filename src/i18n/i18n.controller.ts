@@ -17,6 +17,8 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { I18nService } from './i18n.service';
+import { ApiResponseDto } from '@/common/classes/response.dto';
+import { ApiMessageKey } from '@/common/constants/message.constants';
 
 @ApiTags('Internationalization')
 @Controller('i18n')
@@ -46,7 +48,12 @@ export class I18nController {
     },
   })
   getSupportedLanguages() {
-    return this.i18nService.getSupportedLanguages();
+    const languages = this.i18nService.getSupportedLanguages();
+    return new ApiResponseDto({
+      statusCode: HttpStatus.OK,
+      data: languages,
+      message: ApiMessageKey.LANGUAGE_KEYS_RETRIEVED_SUCCESS
+    });
   }
 
   @Get('languages/:code')
@@ -70,9 +77,17 @@ export class I18nController {
   getLanguageInfo(@Param('code') code: string) {
     const languageInfo = this.i18nService.getLanguageInfo(code);
     if (!languageInfo) {
-      return { error: 'Language not found' };
+      return new ApiResponseDto({
+        statusCode: HttpStatus.NOT_FOUND,
+        data: null,
+        message: ApiMessageKey.LANGUAGE_NOT_FOUND
+      });
     }
-    return languageInfo;
+    return new ApiResponseDto({
+      statusCode: HttpStatus.OK,
+      data: languageInfo,
+      message: ApiMessageKey.LANGUAGE_KEYS_RETRIEVED_SUCCESS
+    });
   }
 
   @Get('translate')
@@ -120,17 +135,21 @@ export class I18nController {
       try {
         parsedParams = JSON.parse(params);
       } catch (error) {
-        return { error: 'Invalid params JSON' };
+        return new ApiResponseDto({
+          statusCode: HttpStatus.BAD_REQUEST,
+          data: null,
+          message: ApiMessageKey.INVALID_PARAMS
+        });
       }
     }
 
     const translation = this.i18nService.translate(key, language, parsedParams);
     
-    return {
-      key,
-      language,
-      translation,
-    };
+    return new ApiResponseDto({
+      statusCode: HttpStatus.OK,
+      data: { key, language, translation },
+      message: ApiMessageKey.TRANSLATION_SUCCESS
+    });
   }
 
   @Post('translate/batch')
@@ -176,10 +195,11 @@ export class I18nController {
   ) {
     const translations = this.i18nService.translateMultiple(keys, language);
     
-    return {
-      language,
-      translations,
-    };
+    return new ApiResponseDto({
+      statusCode: HttpStatus.OK,
+      data: { language, translations },
+      message: ApiMessageKey.TRANSLATION_SUCCESS
+    });
   }
 
   @Get('namespace/:namespace')
@@ -219,11 +239,11 @@ export class I18nController {
   ) {
     const translations = this.i18nService.getTranslationNamespace(namespace, language);
     
-    return {
-      namespace,
-      language,
-      translations,
-    };
+    return new ApiResponseDto({
+      statusCode: HttpStatus.OK,
+      data: { namespace, language, translations },
+      message: ApiMessageKey.LANGUAGE_KEYS_RETRIEVED_SUCCESS
+    });
   }
 
   @Post('detect-language')
@@ -263,12 +283,16 @@ export class I18nController {
     const result = await this.i18nService.detectLanguage(text);
     const supportedLanguages = this.i18nService.getSupportedLanguages().map(lang => lang.code);
     
-    return {
-      text,
-      detectedLanguage: result.language,
-      confidence: result.confidence,
-      supportedLanguages,
-    };
+    return new ApiResponseDto({
+      statusCode: HttpStatus.OK,
+      data: {
+        text,
+        detectedLanguage: result.language,
+        confidence: result.confidence,
+        supportedLanguages
+      },
+      message: ApiMessageKey.LANGUAGE_KEYS_RETRIEVED_SUCCESS
+    });
   }
 
   @Post('translations')
@@ -298,12 +322,11 @@ export class I18nController {
   ) {
     this.i18nService.addTranslation(language, key, value);
     
-    return {
-      message: 'Translation added successfully',
-      language,
-      key,
-      value,
-    };
+    return new ApiResponseDto({
+      statusCode: HttpStatus.CREATED,
+      data: { language, key, value },
+      message: ApiMessageKey.LANGUAGE_UPDATED_SUCCESS
+    });
   }
 
   @Delete('translations/:language/:key')
@@ -331,10 +354,10 @@ export class I18nController {
   ) {
     this.i18nService.removeTranslation(language, key);
     
-    return {
-      message: 'Translation removed successfully',
-      language,
-      key,
-    };
+    return new ApiResponseDto({
+      statusCode: HttpStatus.OK,
+      data: { language, key },
+      message: ApiMessageKey.LANGUAGE_UPDATED_SUCCESS
+    });
   }
 }

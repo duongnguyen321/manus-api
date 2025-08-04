@@ -45,7 +45,15 @@
       "Bash(cat:*)",
       "Bash(git restore:*)",
       "Bash(PORT=3001 bun run dev)",
-      "Bash(kill:*)"
+      "Bash(kill:*)",
+      "Bash(for:*)",
+      "Bash(do)",
+      "Bash(if [ -f \"$file\" ])",
+      "Bash(then)",
+      "Bash(if ! grep -q \"ApiResponseDto\" \"$file\")",
+      "Bash(echo \"$file\")",
+      "Bash(fi)",
+      "Bash(done)"
     ],
     "deny": []
   }

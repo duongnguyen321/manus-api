@@ -22,6 +22,8 @@ import {
 } from './dto/session.dto';
 import { AuthGuard } from '../auth/guards/Auth.guard';
 import { Public } from '../auth/decorators/public.decorator';
+import { ApiResponseDto } from '@/common/classes/response.dto';
+import { ApiMessageKey } from '@/common/constants/message.constants';
 
 @ApiTags('Session Management')
 @Controller('session')
@@ -40,8 +42,13 @@ export class SessionController {
     type: SessionResponseDto 
   })
   @ApiResponse({ status: 400, description: 'Bad request' })
-  async createSession(@Body() createSessionDto: CreateSessionDto): Promise<SessionResponseDto> {
-    return this.sessionService.createSession(createSessionDto);
+  async createSession(@Body() createSessionDto: CreateSessionDto): Promise<ApiResponseDto<SessionResponseDto>> {
+    const session = await this.sessionService.createSession(createSessionDto);
+    return new ApiResponseDto({
+      statusCode: HttpStatus.CREATED,
+      data: session,
+      message: ApiMessageKey.SESSION_CREATED_SUCCESS
+    });
   }
 
   @Get(':sessionId')
@@ -57,8 +64,13 @@ export class SessionController {
     type: SessionResponseDto 
   })
   @ApiResponse({ status: 404, description: 'Session not found' })
-  async getSession(@Param('sessionId') sessionId: string): Promise<SessionResponseDto> {
-    return this.sessionService.getSession(sessionId);
+  async getSession(@Param('sessionId') sessionId: string): Promise<ApiResponseDto<SessionResponseDto>> {
+    const session = await this.sessionService.getSession(sessionId);
+    return new ApiResponseDto({
+      statusCode: HttpStatus.OK,
+      data: session,
+      message: ApiMessageKey.SESSION_RETRIEVED_SUCCESS
+    });
   }
 
   @Put(':sessionId')
@@ -78,8 +90,13 @@ export class SessionController {
   async updateSession(
     @Param('sessionId') sessionId: string,
     @Body() updateSessionDto: UpdateSessionDto,
-  ): Promise<SessionResponseDto> {
-    return this.sessionService.updateSession(sessionId, updateSessionDto);
+  ): Promise<ApiResponseDto<SessionResponseDto>> {
+    const session = await this.sessionService.updateSession(sessionId, updateSessionDto);
+    return new ApiResponseDto({
+      statusCode: HttpStatus.OK,
+      data: session,
+      message: ApiMessageKey.SESSION_UPDATED_SUCCESS
+    });
   }
 
   @Delete(':sessionId')
@@ -92,8 +109,13 @@ export class SessionController {
   @ApiParam({ name: 'sessionId', description: 'Session ID' })
   @ApiResponse({ status: 204, description: 'Session deleted successfully' })
   @ApiResponse({ status: 404, description: 'Session not found' })
-  async deleteSession(@Param('sessionId') sessionId: string): Promise<void> {
-    return this.sessionService.deleteSession(sessionId);
+  async deleteSession(@Param('sessionId') sessionId: string): Promise<ApiResponseDto<any>> {
+    const result = await this.sessionService.deleteSession(sessionId);
+    return new ApiResponseDto({
+      statusCode: HttpStatus.OK,
+      data: result,
+      message: ApiMessageKey.SESSION_DELETED_SUCCESS
+    });
   }
 
   @Get('user/:userId')
@@ -115,8 +137,13 @@ export class SessionController {
     @Param('userId') userId: string,
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
-  ): Promise<SessionListResponseDto> {
-    return this.sessionService.getUserSessions(userId, page, limit);
+  ): Promise<ApiResponseDto<SessionListResponseDto>> {
+    const sessions = await this.sessionService.getUserSessions(userId, page, limit);
+    return new ApiResponseDto({
+      statusCode: HttpStatus.OK,
+      data: sessions,
+      message: ApiMessageKey.USER_SESSIONS_RETRIEVED_SUCCESS
+    });
   }
 
   @Get()
@@ -136,8 +163,13 @@ export class SessionController {
   async getActiveSessions(
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
-  ): Promise<SessionListResponseDto> {
-    return this.sessionService.getActiveSessions(page, limit);
+  ): Promise<ApiResponseDto<SessionListResponseDto>> {
+    const sessions = await this.sessionService.getActiveSessions(page, limit);
+    return new ApiResponseDto({
+      statusCode: HttpStatus.OK,
+      data: sessions,
+      message: ApiMessageKey.ACTIVE_SESSIONS_RETRIEVED_SUCCESS
+    });
   }
 
   @Put(':sessionId/config')
@@ -156,8 +188,13 @@ export class SessionController {
   async updateSessionConfig(
     @Param('sessionId') sessionId: string,
     @Body() config: SessionConfigDto,
-  ): Promise<SessionResponseDto> {
-    return this.sessionService.updateSessionConfig(sessionId, config);
+  ): Promise<ApiResponseDto<SessionResponseDto>> {
+    const result = await this.sessionService.updateSessionConfig(sessionId, config);
+    return new ApiResponseDto({
+      statusCode: HttpStatus.OK,
+      data: result,
+      message: ApiMessageKey.SESSION_CONFIG_UPDATED_SUCCESS
+    });
   }
 
   @Get(':sessionId/config')
@@ -172,8 +209,13 @@ export class SessionController {
     description: 'Session configuration retrieved successfully', 
     type: SessionConfigDto 
   })
-  async getSessionConfig(@Param('sessionId') sessionId: string): Promise<SessionConfigDto> {
-    return this.sessionService.getSessionConfig(sessionId);
+  async getSessionConfig(@Param('sessionId') sessionId: string): Promise<ApiResponseDto<SessionConfigDto>> {
+    const config = await this.sessionService.getSessionConfig(sessionId);
+    return new ApiResponseDto({
+      statusCode: HttpStatus.OK,
+      data: config,
+      message: ApiMessageKey.SESSION_CONFIG_RETRIEVED_SUCCESS
+    });
   }
 
   @Post('cleanup/expired')
@@ -193,8 +235,12 @@ export class SessionController {
       }
     }
   })
-  async cleanupExpiredSessions(): Promise<{ cleanedCount: number }> {
+  async cleanupExpiredSessions(): Promise<ApiResponseDto<{ cleanedCount: number }>> {
     const cleanedCount = await this.sessionService.cleanupExpiredSessions();
-    return { cleanedCount };
+    return new ApiResponseDto({
+      statusCode: HttpStatus.OK,
+      data: { cleanedCount },
+      message: ApiMessageKey.SESSIONS_CLEANED_SUCCESS
+    });
   }
 }

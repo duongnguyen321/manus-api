@@ -27,6 +27,8 @@ import { PluginService, PluginExecutionContext } from './plugin.service';
 import { AuthGuard } from '../auth/guards/Auth.guard';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { User } from '@prisma/client';
+import { ApiResponseDto } from '@/common/classes/response.dto';
+import { ApiMessageKey } from '@/common/constants/message.constants';
 
 @ApiTags('Plugins')
 @Controller('plugins')
@@ -112,7 +114,11 @@ export class PluginController {
       plugins = plugins.filter(plugin => plugin.config.enabled === enabled);
     }
     
-    return plugins;
+    return new ApiResponseDto({
+      statusCode: HttpStatus.OK,
+      data: plugins,
+      message: ApiMessageKey.PLUGIN_RETRIEVED_SUCCESS
+    });
   }
 
   @Get(':pluginId')
@@ -136,9 +142,17 @@ export class PluginController {
   async getPlugin(@Param('pluginId') pluginId: string) {
     const plugin = await this.pluginService.getPlugin(pluginId);
     if (!plugin) {
-      return { error: 'Plugin not found' };
+      return new ApiResponseDto({
+        statusCode: HttpStatus.NOT_FOUND,
+        data: null,
+        message: ApiMessageKey.PLUGIN_NOT_FOUND
+      });
     }
-    return plugin;
+    return new ApiResponseDto({
+      statusCode: HttpStatus.OK,
+      data: plugin,
+      message: ApiMessageKey.PLUGIN_RETRIEVED_SUCCESS
+    });
   }
 
   @Get(':pluginId/tools')
@@ -171,7 +185,12 @@ export class PluginController {
     },
   })
   async getPluginTools(@Param('pluginId') pluginId: string) {
-    return this.pluginService.getPluginTools(pluginId);
+    const tools = await this.pluginService.getPluginTools(pluginId);
+    return new ApiResponseDto({
+      statusCode: HttpStatus.OK,
+      data: tools,
+      message: ApiMessageKey.PLUGIN_TOOLS_RETRIEVED_SUCCESS
+    });
   }
 
   @Post(':pluginId/tools/:toolId/execute')
@@ -239,7 +258,12 @@ export class PluginController {
       permissions: ['*'], // In a real implementation, get from user permissions
     };
 
-    return this.pluginService.executePluginTool(pluginId, toolId, input, context);
+    const result = await this.pluginService.executePluginTool(pluginId, toolId, input, context);
+    return new ApiResponseDto({
+      statusCode: HttpStatus.OK,
+      data: result,
+      message: ApiMessageKey.PLUGIN_TOOL_EXECUTED_SUCCESS
+    });
   }
 
   @Post('install')
@@ -276,15 +300,17 @@ export class PluginController {
   ) {
     try {
       await this.pluginService.installPlugin(file.buffer, user.id);
-      return {
-        message: 'Plugin installed successfully',
-        filename: file.originalname,
-      };
+      return new ApiResponseDto({
+        statusCode: HttpStatus.CREATED,
+        data: { filename: file.originalname },
+        message: ApiMessageKey.PLUGIN_INSTALLED_SUCCESS
+      });
     } catch (error) {
-      return {
-        error: 'Plugin installation failed',
-        details: error.message,
-      };
+      return new ApiResponseDto({
+        statusCode: HttpStatus.BAD_REQUEST,
+        data: { details: error.message },
+        message: ApiMessageKey.PLUGIN_INSTALLATION_FAILED
+      });
     }
   }
 
@@ -312,15 +338,17 @@ export class PluginController {
   ) {
     try {
       await this.pluginService.uninstallPlugin(pluginId, user.id);
-      return {
-        message: 'Plugin uninstalled successfully',
-        pluginId,
-      };
+      return new ApiResponseDto({
+        statusCode: HttpStatus.OK,
+        data: { pluginId },
+        message: ApiMessageKey.PLUGIN_UNINSTALLED_SUCCESS
+      });
     } catch (error) {
-      return {
-        error: 'Plugin uninstallation failed',
-        details: error.message,
-      };
+      return new ApiResponseDto({
+        statusCode: HttpStatus.BAD_REQUEST,
+        data: { details: error.message },
+        message: ApiMessageKey.PLUGIN_UNINSTALLATION_FAILED
+      });
     }
   }
 
@@ -341,15 +369,17 @@ export class PluginController {
   async enablePlugin(@Param('pluginId') pluginId: string) {
     try {
       await this.pluginService.enablePlugin(pluginId);
-      return {
-        message: 'Plugin enabled successfully',
-        pluginId,
-      };
+      return new ApiResponseDto({
+        statusCode: HttpStatus.OK,
+        data: { pluginId },
+        message: ApiMessageKey.PLUGIN_ENABLED_SUCCESS
+      });
     } catch (error) {
-      return {
-        error: 'Failed to enable plugin',
-        details: error.message,
-      };
+      return new ApiResponseDto({
+        statusCode: HttpStatus.BAD_REQUEST,
+        data: { details: error.message },
+        message: ApiMessageKey.PLUGIN_ENABLE_FAILED
+      });
     }
   }
 
@@ -370,15 +400,17 @@ export class PluginController {
   async disablePlugin(@Param('pluginId') pluginId: string) {
     try {
       await this.pluginService.disablePlugin(pluginId);
-      return {
-        message: 'Plugin disabled successfully',
-        pluginId,
-      };
+      return new ApiResponseDto({
+        statusCode: HttpStatus.OK,
+        data: { pluginId },
+        message: ApiMessageKey.PLUGIN_DISABLED_SUCCESS
+      });
     } catch (error) {
-      return {
-        error: 'Failed to disable plugin',
-        details: error.message,
-      };
+      return new ApiResponseDto({
+        statusCode: HttpStatus.BAD_REQUEST,
+        data: { details: error.message },
+        message: ApiMessageKey.PLUGIN_DISABLE_FAILED
+      });
     }
   }
 
@@ -413,15 +445,17 @@ export class PluginController {
   ) {
     try {
       await this.pluginService.updatePluginConfig(pluginId, config);
-      return {
-        message: 'Plugin configuration updated successfully',
-        pluginId,
-      };
+      return new ApiResponseDto({
+        statusCode: HttpStatus.OK,
+        data: { pluginId },
+        message: ApiMessageKey.PLUGIN_CONFIG_UPDATED_SUCCESS
+      });
     } catch (error) {
-      return {
-        error: 'Failed to update plugin configuration',
-        details: error.message,
-      };
+      return new ApiResponseDto({
+        statusCode: HttpStatus.BAD_REQUEST,
+        data: { details: error.message },
+        message: ApiMessageKey.PLUGIN_CONFIG_UPDATE_FAILED
+      });
     }
   }
 
@@ -481,6 +515,10 @@ export class PluginController {
       },
     ];
 
-    return categories;
+    return new ApiResponseDto({
+      statusCode: HttpStatus.OK,
+      data: categories,
+      message: ApiMessageKey.PLUGIN_RETRIEVED_SUCCESS
+    });
   }
 }
