@@ -1,13 +1,13 @@
-import {ChangePasswordDto} from "@/auth/dto/change-password.dto";
-import {CreateAccountDto} from "@/auth/dto/create-account.dto";
-import {LoginAccountDto} from "@/auth/dto/login-account.dto";
-import {AuthGuard} from './guards/Auth.guard';
-import {LogoutDto} from './dto/logout.dto';
-import {RefreshTokenDto} from './dto/refreshToken.dto';
-import {ILoginProfile} from './interfaces/ILoginProfile';
-import {ApiResponseDto} from '@/common/classes/response.dto';
-import {ApiMessageKey} from '@/common/constants/message.constants';
-import {BasicHeader} from '@/common/decorators/basic-header.decorator';
+import { ChangePasswordDto } from '@/auth/dto/change-password.dto';
+import { CreateAccountDto } from '@/auth/dto/create-account.dto';
+import { LoginAccountDto } from '@/auth/dto/login-account.dto';
+import { AuthGuard } from './guards/Auth.guard';
+import { LogoutDto } from './dto/logout.dto';
+import { RefreshTokenDto } from './dto/refreshToken.dto';
+import { ILoginProfile } from './interfaces/ILoginProfile';
+import { ApiResponseDto } from '@/common/classes/response.dto';
+import { ApiMessageKey } from '@/common/constants/message.constants';
+import { BasicHeader } from '@/common/decorators/basic-header.decorator';
 import {
 	Body,
 	Controller,
@@ -23,22 +23,21 @@ import {
 	ApiOkResponse,
 	ApiOperation,
 } from '@nestjs/swagger';
-import {AuthService} from './auth.service';
-import {Public} from './decorators/public.decorator';
+import { AuthService } from './auth.service';
+import { Public } from './decorators/public.decorator';
 
 @BasicHeader('Auth')
 @Controller('auth')
 export class AuthController {
-	constructor(private readonly authService: AuthService) {
-	}
+	constructor(private readonly authService: AuthService) {}
 
 	@Public()
 	@Get('google')
 	@ApiOperation({
 		summary: 'Get google redirect',
 	})
-	@ApiOkResponse({type: ApiResponseDto<string>})
-	@ApiOperation({summary: 'Get redirect string url for Google OAuth'})
+	@ApiOkResponse({ type: ApiResponseDto<string> })
+	@ApiOperation({ summary: 'Get redirect string url for Google OAuth' })
 	async googleAuth() {
 		try {
 			const url = await this.authService.googleLogin();
@@ -58,8 +57,8 @@ export class AuthController {
 	@ApiOperation({
 		summary: 'Login google callback',
 	})
-	@ApiOkResponse({type: ApiResponseDto<ILoginProfile>})
-	@ApiOperation({summary: 'Handle Google OAuth callback'})
+	@ApiOkResponse({ type: ApiResponseDto<ILoginProfile> })
+	@ApiOperation({ summary: 'Handle Google OAuth callback' })
 	async googleAuthCallback(@Query('code') code: string) {
 		try {
 			const user = await this.authService.googleLoginCallback(code);
@@ -74,15 +73,14 @@ export class AuthController {
 		}
 	}
 
-
 	@Public()
 	@Post('email/create')
 	@ApiOperation({
 		summary: 'Create account by email',
 	})
-	@ApiBody({type: CreateAccountDto})
-	@ApiOkResponse({type: ApiResponseDto<ILoginProfile>})
-	@ApiOperation({summary: 'Create account by email'})
+	@ApiBody({ type: CreateAccountDto })
+	@ApiOkResponse({ type: ApiResponseDto<ILoginProfile> })
+	@ApiOperation({ summary: 'Create account by email' })
 	async createAccountEmail(@Body() body: CreateAccountDto) {
 		try {
 			const user = await this.authService.createAccount(body);
@@ -102,9 +100,9 @@ export class AuthController {
 	@ApiOperation({
 		summary: 'Login account by email',
 	})
-	@ApiBody({type: LoginAccountDto})
-	@ApiOkResponse({type: ApiResponseDto<ILoginProfile>})
-	@ApiOperation({summary: 'Login account by email'})
+	@ApiBody({ type: LoginAccountDto })
+	@ApiOkResponse({ type: ApiResponseDto<ILoginProfile> })
+	@ApiOperation({ summary: 'Login account by email' })
 	async loginAccountEmail(@Body() body: LoginAccountDto) {
 		try {
 			const user = await this.authService.login(body);
@@ -124,9 +122,9 @@ export class AuthController {
 	@ApiOperation({
 		summary: 'Change password account by email',
 	})
-	@ApiBody({type: ChangePasswordDto})
-	@ApiOkResponse({type: ApiResponseDto<ILoginProfile>})
-	@ApiOperation({summary: 'Change password account by email'})
+	@ApiBody({ type: ChangePasswordDto })
+	@ApiOkResponse({ type: ApiResponseDto<ILoginProfile> })
+	@ApiOperation({ summary: 'Change password account by email' })
 	async changePasswordAccountEmail(@Body() body: ChangePasswordDto) {
 		try {
 			const user = await this.authService.changePassword(body);
@@ -145,9 +143,9 @@ export class AuthController {
 	@ApiOperation({
 		summary: 'Get refresh token',
 	})
-	@ApiBody({type: RefreshTokenDto})
-	@ApiOkResponse({type: ApiResponseDto<ILoginProfile>})
-	@ApiOperation({summary: 'Get refresh token'})
+	@ApiBody({ type: RefreshTokenDto })
+	@ApiOkResponse({ type: ApiResponseDto<ILoginProfile> })
+	@ApiOperation({ summary: 'Get refresh token' })
 	async getNewAccessToken(@Body() body: RefreshTokenDto) {
 		try {
 			const user = await this.authService.renewToken(body);
@@ -168,9 +166,9 @@ export class AuthController {
 	@ApiOperation({
 		summary: 'Block token when logout',
 	})
-	@ApiBody({type: LogoutDto})
-	@ApiOkResponse({type: ApiResponseDto<boolean>})
-	@ApiOperation({summary: 'Block token when logout'})
+	@ApiBody({ type: LogoutDto })
+	@ApiOkResponse({ type: ApiResponseDto<boolean> })
+	@ApiOperation({ summary: 'Block token when logout' })
 	async logout(@Body() body: LogoutDto) {
 		try {
 			const user = await this.authService.logout(body);

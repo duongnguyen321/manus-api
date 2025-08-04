@@ -218,7 +218,10 @@ export class AuthService {
 		// if (!checkBusinessEmail) {
 		//   throw new BadRequestException("Email is not a business email");
 		// }
-		const user = await this.users.getUserByEmail(email);
+
+		const user = await this.users.getUserByEmail(email, {
+			password: true,
+		});
 		if (!user) {
 			throw new BadRequestException('User not found');
 		}

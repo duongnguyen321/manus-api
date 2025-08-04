@@ -1,478 +1,505 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ChatOpenAI } from '@langchain/openai';
 import {
-  HumanMessage,
-  AIMessage,
-  SystemMessage,
+	HumanMessage,
+	AIMessage,
+	SystemMessage,
 } from '@langchain/core/messages';
 import { DynamicTool } from '@langchain/core/tools';
 import { AgentExecutor, createOpenAIFunctionsAgent } from 'langchain/agents';
-import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts';
+import {
+	ChatPromptTemplate,
+	MessagesPlaceholder,
+} from '@langchain/core/prompts';
 
 import { DockerService } from '../docker/docker.service';
 import { BrowserService } from '../browser/browser.service';
 import { PrismaService } from '../prisma/prisma.service';
 import promptConfig from '../common/config/prompt.config';
+import { isMongoId } from '@/common/helpers/validate.helper';
 
 export interface SimpleMessage {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  timestamp: Date;
-  toolCalls?: any[];
+	role: 'user' | 'assistant' | 'system';
+	content: string;
+	timestamp: Date;
+	toolCalls?: any[];
 }
 
 export interface SimpleSession {
-  id: string;
-  userId: string;
-  messages: SimpleMessage[];
-  createdAt: Date;
-  updatedAt: Date;
-  dockerContainers?: string[];
-  browserContext?: string;
+	id: string;
+	userId: string;
+	messages: SimpleMessage[];
+	createdAt: Date;
+	updatedAt: Date;
+	dockerContainers?: string[];
+	browserContext?: string;
 }
 
 export interface SimpleChatRequest {
-  message: string;
-  sessionId?: string;
-  userId: string;
+	message: string;
+	sessionId?: string;
+	userId: string;
 }
 
 export interface SimpleChatResponse {
-  response: string;
-  sessionId: string;
-  toolsUsed: string[];
-  executionTime: number;
-  timestamp: string;
+	response: string;
+	sessionId: string;
+	toolsUsed: string[];
+	executionTime: number;
+	timestamp: string;
 }
 
 @Injectable()
 export class SimpleService {
-  private readonly logger = new Logger(SimpleService.name);
-  private llm: ChatOpenAI;
+	private readonly logger = new Logger(SimpleService.name);
+	private llm: ChatOpenAI;
 
-  constructor(
-    private readonly configService: ConfigService,
-    private readonly dockerService: DockerService,
-    private readonly browserService: BrowserService,
-    private readonly prisma: PrismaService,
-  ) {
-    this.llm = new ChatOpenAI({
-      modelName: this.configService.get('OPENAI_MODEL', 'gpt-3.5-turbo'),
-      temperature: 0.7,
-      maxTokens: 2000,
-      openAIApiKey: this.configService.get('OPENAI_API_KEY'),
-    });
-  }
+	constructor(
+		private readonly configService: ConfigService,
+		private readonly dockerService: DockerService,
+		private readonly browserService: BrowserService,
+		private readonly prisma: PrismaService
+	) {
+		this.llm = new ChatOpenAI({
+			modelName: this.configService.get('OPENAI_MODEL', 'gpt-3.5-turbo'),
+			temperature: 0.7,
+			maxTokens: 2000,
+			openAIApiKey: this.configService.get('OPENAI_API_KEY'),
+		});
+	}
 
-  async createSession(userId: string): Promise<string> {
-    const sessionId = `simple_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
-    try {
-      await this.prisma.aISession.create({
-        data: {
-          sessionId,
-          userId,
-          metadata: JSON.parse(JSON.stringify({
-            type: 'simple',
-            messages: [],
-            dockerContainers: [],
-            browserContext: null,
-          })),
-        },
-      });
+	async createSession(userId: string): Promise<string> {
+		const sessionId = `simple_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-      this.logger.log(`Created simple session ${sessionId} for user ${userId}`);
-      return sessionId;
-    } catch (error) {
-      this.logger.error(`Failed to create session: ${error.message}`);
-      throw error;
-    }
-  }
+		try {
+			await this.prisma.aISession.create({
+				data: {
+					sessionId,
+					userId,
+					metadata: JSON.parse(
+						JSON.stringify({
+							type: 'simple',
+							messages: [],
+							dockerContainers: [],
+							browserContext: null,
+						})
+					),
+				},
+			});
 
-  async chat(request: SimpleChatRequest): Promise<SimpleChatResponse> {
-    const startTime = Date.now();
-    let sessionId = request.sessionId;
+			this.logger.log(`Created simple session ${sessionId} for user ${userId}`);
+			return sessionId;
+		} catch (error) {
+			this.logger.error(`Failed to create session: ${error.message}`);
+			throw error;
+		}
+	}
 
-    try {
-      // Debug logging
-      this.logger.log(`Chat request: ${JSON.stringify(request)}`);
-      
-      // Validate message
-      if (!request.message || request.message.trim() === '') {
-        throw new Error('Message is required and cannot be empty');
-      }
+	async chat(request: SimpleChatRequest): Promise<SimpleChatResponse> {
+		const startTime = Date.now();
+		let sessionId = request.sessionId;
 
-      // Create session if not provided
-      if (!sessionId) {
-        sessionId = await this.createSession(request.userId);
-      }
+		try {
+			// Debug logging
+			this.logger.log(`Chat request: ${JSON.stringify(request)}`);
 
-      // Get session data
-      const session = await this.getSession(sessionId);
-      if (!session) {
-        throw new Error(`Session ${sessionId} not found`);
-      }
+			// Validate message
+			if (!request.message || request.message.trim() === '') {
+				throw new Error('Message is required and cannot be empty');
+			}
 
-      // Add user message to session
-      const userMessage: SimpleMessage = {
-        role: 'user',
-        content: request.message,
-        timestamp: new Date(),
-      };
+			// Create session if not provided
+			if (!sessionId) {
+				sessionId = await this.createSession(request.userId);
+			}
 
-      session.messages.push(userMessage);
+			// Get session data
+			const session = await this.getSession(sessionId);
+			if (!session) {
+				throw new Error(`Session ${sessionId} not found`);
+			}
 
-      // Create tools for the agent
-      const tools = this.createTools(sessionId);
+			// Add user message to session
+			const userMessage: SimpleMessage = {
+				role: 'user',
+				content: request.message,
+				timestamp: new Date(),
+			};
 
-      // Create prompt with system context
-      const prompt = ChatPromptTemplate.fromMessages([
-        ['system', promptConfig.modulesPrompt],
-        new MessagesPlaceholder('chat_history'),
-        ['human', '{input}'],
-        new MessagesPlaceholder('agent_scratchpad'),
-      ]);
+			session.messages.push(userMessage);
 
-      // Create agent
-      const agent = await createOpenAIFunctionsAgent({
-        llm: this.llm,
-        tools,
-        prompt,
-      });
+			// Create tools for the agent
+			const tools = this.createTools(sessionId);
 
-      // Create agent executor
-      const agentExecutor = new AgentExecutor({
-        agent,
-        tools,
-        verbose: true,
-        maxIterations: 5,
-      });
+			// Create prompt with system context
+			const prompt = ChatPromptTemplate.fromMessages([
+				['system', promptConfig.modulesPrompt],
+				new MessagesPlaceholder('chat_history'),
+				['human', '{input}'],
+				new MessagesPlaceholder('agent_scratchpad'),
+			]);
 
-      // Prepare chat history
-      const chatHistory = this.formatChatHistory(session.messages.slice(0, -1));
+			// Create agent
+			const agent = await createOpenAIFunctionsAgent({
+				llm: this.llm,
+				tools,
+				prompt,
+			});
 
-      // Debug logging
-      this.logger.log(`Invoking agent with input: "${request.message}"`);
+			// Create agent executor
+			const agentExecutor = new AgentExecutor({
+				agent,
+				tools,
+				verbose: true,
+				maxIterations: 5,
+			});
 
-      // Execute agent
-      const result = await agentExecutor.invoke({
-        input: request.message,
-        chat_history: chatHistory,
-      });
+			// Prepare chat history
+			const chatHistory = this.formatChatHistory(session.messages.slice(0, -1));
 
-      // Add assistant response to session
-      const assistantMessage: SimpleMessage = {
-        role: 'assistant',
-        content: result.output,
-        timestamp: new Date(),
-        toolCalls: result.intermediateSteps?.map(step => step.action) || [],
-      };
+			// Debug logging
+			this.logger.log(`Invoking agent with input: "${request.message}"`);
 
-      session.messages.push(assistantMessage);
+			// Execute agent
+			const result = await agentExecutor.invoke({
+				input: request.message,
+				chat_history: chatHistory,
+			});
 
-      // Update session in database
-      await this.updateSession(sessionId, session);
+			// Add assistant response to session
+			const assistantMessage: SimpleMessage = {
+				role: 'assistant',
+				content: result.output,
+				timestamp: new Date(),
+				toolCalls: result.intermediateSteps?.map((step) => step.action) || [],
+			};
 
-      const executionTime = Date.now() - startTime;
-      const toolsUsed = this.extractToolsUsed(result);
+			session.messages.push(assistantMessage);
 
-      return {
-        response: result.output,
-        sessionId,
-        toolsUsed,
-        executionTime,
-        timestamp: new Date().toISOString(),
-      };
+			// Update session in database
+			await this.updateSession(sessionId, session);
 
-    } catch (error) {
-      this.logger.error(`Simple chat failed: ${error.message}`);
-      throw error;
-    }
-  }
+			const executionTime = Date.now() - startTime;
+			const toolsUsed = this.extractToolsUsed(result);
 
-  async getSession(sessionId: string): Promise<SimpleSession | null> {
-    try {
-      const session = await this.prisma.aISession.findUnique({
-        where: { sessionId: sessionId },
-      });
+			return {
+				response: result.output,
+				sessionId,
+				toolsUsed,
+				executionTime,
+				timestamp: new Date().toISOString(),
+			};
+		} catch (error) {
+			this.logger.error(`Simple chat failed: ${error.message}`);
+			throw error;
+		}
+	}
 
-      if (!session) {
-        return null;
-      }
+	async getSession(sessionId: string): Promise<SimpleSession | null> {
+		try {
+			const session = await this.prisma.aISession.findUnique({
+				where: { sessionId: sessionId },
+			});
 
-      return {
-        id: session.id,
-        userId: session.userId || '',
-        messages: (session.metadata as any)?.messages || [],
-        createdAt: session.createdAt,
-        updatedAt: session.updatedAt,
-        dockerContainers: (session.metadata as any)?.dockerContainers || [],
-        browserContext: (session.metadata as any)?.browserContext,
-      };
-    } catch (error) {
-      this.logger.error(`Failed to get session: ${error.message}`);
-      return null;
-    }
-  }
+			if (!session) {
+				return null;
+			}
 
-  async deleteSession(sessionId: string, userId: string): Promise<boolean> {
-    try {
-      // Cleanup Docker containers
-      const session = await this.getSession(sessionId);
-      if (session?.dockerContainers?.length > 0) {
-        await this.dockerService.cleanupSessionContainers(sessionId);
-      }
+			return {
+				id: session.id,
+				userId: session.userId || '',
+				messages: (session.metadata as any)?.messages || [],
+				createdAt: session.createdAt,
+				updatedAt: session.updatedAt,
+				dockerContainers: (session.metadata as any)?.dockerContainers || [],
+				browserContext: (session.metadata as any)?.browserContext,
+			};
+		} catch (error) {
+			this.logger.error(`Failed to get session: ${error.message}`);
+			return null;
+		}
+	}
 
-      // Cleanup browser context
-      if (session?.browserContext) {
-        await this.browserService.closeBrowserContext(session.browserContext);
-      }
+	async getSessionList(userId: string) {
+		if (!isMongoId(userId)) {
+			throw new BadRequestException('Invalid user ID');
+		}
+		const sessions = await this.prisma.aISession.findMany({
+			where: {
+				userId,
+			},
+		});
 
-      // Delete session from database
-      await this.prisma.aISession.delete({
-        where: { 
-          sessionId: sessionId,
-          userId, // Ensure user owns the session
-        },
-      });
+		return sessions;
+	}
 
-      this.logger.log(`Deleted session ${sessionId}`);
-      return true;
-    } catch (error) {
-      this.logger.error(`Failed to delete session: ${error.message}`);
-      return false;
-    }
-  }
+	async deleteSession(sessionId: string, userId: string): Promise<boolean> {
+		try {
+			// Cleanup Docker containers
+			const session = await this.getSession(sessionId);
+			if (session?.dockerContainers?.length > 0) {
+				await this.dockerService.cleanupSessionContainers(sessionId);
+			}
 
-  private async updateSession(sessionId: string, session: SimpleSession): Promise<void> {
-    try {
-      await this.prisma.aISession.update({
-        where: { sessionId: sessionId },
-        data: {
-          metadata: JSON.parse(JSON.stringify({
-            type: 'simple',
-            messages: session.messages,
-            dockerContainers: session.dockerContainers || [],
-            browserContext: session.browserContext,
-          })),
-          updatedAt: new Date(),
-          lastAccessedAt: new Date(),
-        },
-      });
-    } catch (error) {
-      this.logger.error(`Failed to update session: ${error.message}`);
-    }
-  }
+			// Cleanup browser context
+			if (session?.browserContext) {
+				await this.browserService.closeBrowserContext(session.browserContext);
+			}
 
-  private createTools(sessionId: string): DynamicTool[] {
-    const tools: DynamicTool[] = [];
+			// Delete session from database
+			await this.prisma.aISession.delete({
+				where: {
+					sessionId: sessionId,
+					userId, // Ensure user owns the session
+				},
+			});
 
-    // Message tools
-    tools.push(
-      new DynamicTool({
-        name: 'message_notify_user',
-        description: 'Send a message to user without requiring a response',
-        func: async (input: string) => {
-          const params = JSON.parse(input);
-          return `Message sent to user: ${params.text}`;
-        },
-      }),
-    );
+			this.logger.log(`Deleted session ${sessionId}`);
+			return true;
+		} catch (error) {
+			this.logger.error(`Failed to delete session: ${error.message}`);
+			return false;
+		}
+	}
 
-    tools.push(
-      new DynamicTool({
-        name: 'message_ask_user',
-        description: 'Ask user a question and wait for response',
-        func: async (input: string) => {
-          const params = JSON.parse(input);
-          return `Question asked to user: ${params.text}`;
-        },
-      }),
-    );
+	private async updateSession(
+		sessionId: string,
+		session: SimpleSession
+	): Promise<void> {
+		try {
+			await this.prisma.aISession.update({
+				where: { sessionId: sessionId },
+				data: {
+					metadata: JSON.parse(
+						JSON.stringify({
+							type: 'simple',
+							messages: session.messages,
+							dockerContainers: session.dockerContainers || [],
+							browserContext: session.browserContext,
+						})
+					),
+					updatedAt: new Date(),
+					lastAccessedAt: new Date(),
+				},
+			});
+		} catch (error) {
+			this.logger.error(`Failed to update session: ${error.message}`);
+		}
+	}
 
-    // File operations
-    tools.push(
-      new DynamicTool({
-        name: 'file_read',
-        description: 'Read file content',
-        func: async (input: string) => {
-          const params = JSON.parse(input);
-          // Simulate file reading for demo
-          return `File content from ${params.file}: [File content would be here]`;
-        },
-      }),
-    );
+	private createTools(sessionId: string): DynamicTool[] {
+		const tools: DynamicTool[] = [];
 
-    tools.push(
-      new DynamicTool({
-        name: 'file_write',
-        description: 'Write content to file',
-        func: async (input: string) => {
-          const params = JSON.parse(input);
-          // Simulate file writing for demo
-          return `Content written to file ${params.file}`;
-        },
-      }),
-    );
+		// Message tools
+		tools.push(
+			new DynamicTool({
+				name: 'message_notify_user',
+				description: 'Send a message to user without requiring a response',
+				func: async (input: string) => {
+					const params = JSON.parse(input);
+					return `Message sent to user: ${params.text}`;
+				},
+			})
+		);
 
-    // Docker execution tools
-    tools.push(
-      new DynamicTool({
-        name: 'shell_exec',
-        description: 'Execute shell commands in Docker container',
-        func: async (input: string) => {
-          const params = JSON.parse(input);
-          const result = await this.dockerService.executeCode(
-            'bash',
-            params.command,
-            sessionId,
-          );
-          return result.success ? result.output : `Error: ${result.error}`;
-        },
-      }),
-    );
+		tools.push(
+			new DynamicTool({
+				name: 'message_ask_user',
+				description: 'Ask user a question and wait for response',
+				func: async (input: string) => {
+					const params = JSON.parse(input);
+					return `Question asked to user: ${params.text}`;
+				},
+			})
+		);
 
-    tools.push(
-      new DynamicTool({
-        name: 'python_exec',
-        description: 'Execute Python code in Docker container',
-        func: async (input: string) => {
-          const params = JSON.parse(input);
-          const result = await this.dockerService.executeCode(
-            'python',
-            params.code,
-            sessionId,
-          );
-          return result.success ? result.output : `Error: ${result.error}`;
-        },
-      }),
-    );
+		// File operations
+		tools.push(
+			new DynamicTool({
+				name: 'file_read',
+				description: 'Read file content',
+				func: async (input: string) => {
+					const params = JSON.parse(input);
+					// Simulate file reading for demo
+					return `File content from ${params.file}: [File content would be here]`;
+				},
+			})
+		);
 
-    tools.push(
-      new DynamicTool({
-        name: 'nodejs_exec',
-        description: 'Execute Node.js code in Docker container',
-        func: async (input: string) => {
-          const params = JSON.parse(input);
-          const result = await this.dockerService.executeCode(
-            'nodejs',
-            params.code,
-            sessionId,
-          );
-          return result.success ? result.output : `Error: ${result.error}`;
-        },
-      }),
-    );
+		tools.push(
+			new DynamicTool({
+				name: 'file_write',
+				description: 'Write content to file',
+				func: async (input: string) => {
+					const params = JSON.parse(input);
+					// Simulate file writing for demo
+					return `Content written to file ${params.file}`;
+				},
+			})
+		);
 
-    // Browser tools
-    tools.push(
-      new DynamicTool({
-        name: 'browser_navigate',
-        description: 'Navigate browser to URL',
-        func: async (input: string) => {
-          const params = JSON.parse(input);
-          
-          // Create browser context if not exists
-          const session = await this.getSession(sessionId);
-          let contextId = session?.browserContext;
-          
-          if (!contextId) {
-            contextId = await this.browserService.createBrowserContext(sessionId);
-            // Update session with browser context
-            if (session) {
-              session.browserContext = contextId;
-              await this.updateSession(sessionId, session);
-            }
-          }
+		// Docker execution tools
+		tools.push(
+			new DynamicTool({
+				name: 'shell_exec',
+				description: 'Execute shell commands in Docker container',
+				func: async (input: string) => {
+					const params = JSON.parse(input);
+					const result = await this.dockerService.executeCode(
+						'bash',
+						params.command,
+						sessionId
+					);
+					return result.success ? result.output : `Error: ${result.error}`;
+				},
+			})
+		);
 
-          const result = await this.browserService.navigateToUrl(contextId, params.url);
-          return result.success 
-            ? `Navigated to ${params.url}. Title: ${result.data?.title}`
-            : `Navigation failed: ${result.error}`;
-        },
-      }),
-    );
+		tools.push(
+			new DynamicTool({
+				name: 'python_exec',
+				description: 'Execute Python code in Docker container',
+				func: async (input: string) => {
+					const params = JSON.parse(input);
+					const result = await this.dockerService.executeCode(
+						'python',
+						params.code,
+						sessionId
+					);
+					return result.success ? result.output : `Error: ${result.error}`;
+				},
+			})
+		);
 
-    tools.push(
-      new DynamicTool({
-        name: 'browser_view',
-        description: 'View current browser page content',
-        func: async (input: string) => {
-          const session = await this.getSession(sessionId);
-          const contextId = session?.browserContext;
-          
-          if (!contextId) {
-            return 'No browser context available. Use browser_navigate first.';
-          }
+		tools.push(
+			new DynamicTool({
+				name: 'nodejs_exec',
+				description: 'Execute Node.js code in Docker container',
+				func: async (input: string) => {
+					const params = JSON.parse(input);
+					const result = await this.dockerService.executeCode(
+						'nodejs',
+						params.code,
+						sessionId
+					);
+					return result.success ? result.output : `Error: ${result.error}`;
+				},
+			})
+		);
 
-          const result = await this.browserService.extractContent(contextId);
-          return result.success 
-            ? `Page content: ${JSON.stringify(result.data)}`
-            : `Failed to view page: ${result.error}`;
-        },
-      }),
-    );
+		// Browser tools
+		tools.push(
+			new DynamicTool({
+				name: 'browser_navigate',
+				description: 'Navigate browser to URL',
+				func: async (input: string) => {
+					const params = JSON.parse(input);
 
-    tools.push(
-      new DynamicTool({
-        name: 'browser_screenshot',
-        description: 'Take screenshot of current browser page',
-        func: async (input: string) => {
-          const session = await this.getSession(sessionId);
-          const contextId = session?.browserContext;
-          
-          if (!contextId) {
-            return 'No browser context available. Use browser_navigate first.';
-          }
+					// Create browser context if not exists
+					const session = await this.getSession(sessionId);
+					let contextId = session?.browserContext;
 
-          const result = await this.browserService.takeScreenshot(contextId);
-          return result.success 
-            ? 'Screenshot taken successfully'
-            : `Screenshot failed: ${result.error}`;
-        },
-      }),
-    );
+					if (!contextId) {
+						contextId =
+							await this.browserService.createBrowserContext(sessionId);
+						// Update session with browser context
+						if (session) {
+							session.browserContext = contextId;
+							await this.updateSession(sessionId, session);
+						}
+					}
 
-    // Web search tool
-    tools.push(
-      new DynamicTool({
-        name: 'info_search_web',
-        description: 'Search web pages using search engine',  
-        func: async (input: string) => {
-          const params = JSON.parse(input);
-          // Simulate web search for demo
-          return `Search results for "${params.query}": [Search results would be here]`;
-        },
-      }),
-    );
+					const result = await this.browserService.navigateToUrl(
+						contextId,
+						params.url
+					);
+					return result.success
+						? `Navigated to ${params.url}. Title: ${result.data?.title}`
+						: `Navigation failed: ${result.error}`;
+				},
+			})
+		);
 
-    return tools;
-  }
+		tools.push(
+			new DynamicTool({
+				name: 'browser_view',
+				description: 'View current browser page content',
+				func: async (input: string) => {
+					const session = await this.getSession(sessionId);
+					const contextId = session?.browserContext;
 
-  private formatChatHistory(messages: SimpleMessage[]): any[] {
-    return messages.map((message) => {
-      if (message.role === 'user') {
-        return new HumanMessage(message.content);
-      } else if (message.role === 'assistant') {
-        return new AIMessage(message.content);
-      } else {
-        return new SystemMessage(message.content);
-      }
-    });
-  }
+					if (!contextId) {
+						return 'No browser context available. Use browser_navigate first.';
+					}
 
-  private extractToolsUsed(result: any): string[] {
-    const toolsUsed: string[] = [];
+					const result = await this.browserService.extractContent(contextId);
+					return result.success
+						? `Page content: ${JSON.stringify(result.data)}`
+						: `Failed to view page: ${result.error}`;
+				},
+			})
+		);
 
-    if (result.intermediateSteps) {
-      for (const step of result.intermediateSteps) {
-        if (step.action && step.action.tool) {
-          toolsUsed.push(step.action.tool);
-        }
-      }
-    }
+		tools.push(
+			new DynamicTool({
+				name: 'browser_screenshot',
+				description: 'Take screenshot of current browser page',
+				func: async (input: string) => {
+					const session = await this.getSession(sessionId);
+					const contextId = session?.browserContext;
 
-    return toolsUsed;
-  }
+					if (!contextId) {
+						return 'No browser context available. Use browser_navigate first.';
+					}
+
+					const result = await this.browserService.takeScreenshot(contextId);
+					return result.success
+						? 'Screenshot taken successfully'
+						: `Screenshot failed: ${result.error}`;
+				},
+			})
+		);
+
+		// Web search tool
+		tools.push(
+			new DynamicTool({
+				name: 'info_search_web',
+				description: 'Search web pages using search engine',
+				func: async (input: string) => {
+					const params = JSON.parse(input);
+					// Simulate web search for demo
+					return `Search results for "${params.query}": [Search results would be here]`;
+				},
+			})
+		);
+
+		return tools;
+	}
+
+	private formatChatHistory(messages: SimpleMessage[]): any[] {
+		return messages.map((message) => {
+			if (message.role === 'user') {
+				return new HumanMessage(message.content);
+			} else if (message.role === 'assistant') {
+				return new AIMessage(message.content);
+			} else {
+				return new SystemMessage(message.content);
+			}
+		});
+	}
+
+	private extractToolsUsed(result: any): string[] {
+		const toolsUsed: string[] = [];
+
+		if (result.intermediateSteps) {
+			for (const step of result.intermediateSteps) {
+				if (step.action && step.action.tool) {
+					toolsUsed.push(step.action.tool);
+				}
+			}
+		}
+
+		return toolsUsed;
+	}
 }

@@ -23,10 +23,13 @@ export class UserService {
 		password: false,
 	};
 
-	async getUserByRefreshToken(refreshToken: string): Promise<User | null> {
+	async getUserByRefreshToken(
+		refreshToken: string,
+		userSelect?: { [key in keyof User]?: boolean }
+	): Promise<User | null> {
 		return this.prisma.user.findFirst({
 			where: { refreshToken },
-			select: this.userSelect,
+			select: Object.assign(this.userSelect, userSelect),
 		});
 	}
 
@@ -37,29 +40,37 @@ export class UserService {
 	}
 
 	async getUserById(
-		id: string
+		id: string,
+		userSelect?: { [key in keyof User]?: boolean }
 	): Promise<(User & { accounts: Account[] }) | null> {
 		if (!isMongoId(id)) return null;
 		const user = await this.prisma.user.findUnique({
 			where: { id },
 			select: {
-				...this.userSelect,
+				...Object.assign(this.userSelect, userSelect),
 				accounts: true,
 			},
 		});
 		return user;
 	}
 
-	async getUserByEmail(email: string): Promise<User | null> {
+	async getUserByEmail(
+		email: string,
+		userSelect?: { [key in keyof User]?: boolean }
+	): Promise<User | null> {
 		if (!isEmail(email)) return null;
-		return this.prisma.user.findFirst({
+		return this.prisma.user.findUnique({
 			where: { email },
-			select: this.userSelect,
+			select: Object.assign(
+				Object.assign(this.userSelect, userSelect),
+				userSelect
+			),
 		});
 	}
 
 	async getAllUsers(
-		params: Prisma.UserFindManyArgs
+		params: Prisma.UserFindManyArgs,
+		userSelect?: { [key in keyof User]?: boolean }
 	): Promise<{ total: number; users: User[] }> {
 		const take = params?.take;
 		const skip = params?.skip;
@@ -78,7 +89,7 @@ export class UserService {
 		const users = await this.redis.cached<User[]>(key, '1 day', () =>
 			this.prisma.user.findMany({
 				...params,
-				select: this.userSelect,
+				select: Object.assign(this.userSelect, userSelect),
 			})
 		);
 		return {
