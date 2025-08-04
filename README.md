@@ -5,6 +5,7 @@ A comprehensive, versatile AI system built with NestJS that provides specialized
 ## 🚀 Key Features
 
 ### Multi-Agent AI System
+
 - **9 Specialized AI Agents** with real AI integration (no mock data)
 - **Background Task Processing** with BullMQ and Redis queues
 - **Session Persistence** for offline capability and long-running tasks
@@ -14,54 +15,63 @@ A comprehensive, versatile AI system built with NestJS that provides specialized
 ### AI Agents & Capabilities
 
 #### 🎨 **Artistic Inspiration Agent**
+
 - Artwork search and discovery
 - Creative inspiration sourcing
 - Art collection management
 - Personalized art recommendations
 
 #### 💼 **Career Planning Agent**
+
 - Professional skills assessment
 - Career path recommendations
 - Learning resource discovery
 - Progress tracking and development
 
 #### 🎧 **Customer Service Agent**
+
 - Automated customer inquiry handling
 - Knowledge base integration
 - Escalation to human support
 - Multi-channel support
 
 #### 📧 **Email Management Agent**
+
 - Smart email composition
 - Automated filtering and organization
 - Email scheduling and templates
 - Professional communication assistance
 
 #### 🎓 **Learning Platform Agent**
+
 - Course enrollment and management
 - Learning progress tracking
 - Certificate generation
 - Educational content curation
 
 #### 🧘 **Stress Management Agent**
+
 - Stress level assessment
 - Personalized relaxation techniques
 - Mood tracking and analytics
 - Mental wellness coaching
 
 #### 📊 **Recommendation Agent**
+
 - Content personalization
 - User behavior analysis
 - Intelligent suggestions
 - Preference learning
 
 #### 🎬 **Video Editing Agent**
+
 - Basic video editing operations
 - Effect and transition application
 - Video optimization
 - Creative video assistance
 
 #### 🤖 **General Assistant Agent**
+
 - Multi-purpose AI assistance
 - Web search and research
 - Text generation and editing
@@ -70,24 +80,28 @@ A comprehensive, versatile AI system built with NestJS that provides specialized
 ### System Tools & Automation
 
 #### 📁 **File Operations**
+
 - Read, write, and modify files
 - File search and pattern matching
 - Content analysis and extraction
 - Batch file processing
 
 #### 🌐 **Browser Automation**
+
 - Web scraping and data extraction
 - Page navigation and interaction
 - Screenshot capture
 - Form automation
 
 #### 💻 **Shell Integration**
+
 - Command execution and scripting
 - System process management
 - Environment configuration
 - Development workflow automation
 
 #### 🚀 **Deployment & Infrastructure**
+
 - Port exposure for public access
 - Static website deployment
 - Application containerization
@@ -96,38 +110,45 @@ A comprehensive, versatile AI system built with NestJS that provides specialized
 ## 🛠️ Technologies Used
 
 ### Core Framework
+
 - **NestJS**: Progressive Node.js framework for scalable applications
 - **TypeScript**: Strongly typed programming language
 - **Bun**: Fast JavaScript runtime and package manager
 - **Node.js**: Server-side JavaScript runtime
 
 ### AI & Machine Learning
+
 - **LangChain**: Framework for developing LLM applications
 - **OpenAI API**: GPT models via OpenRouter integration
 - **Real AI Integration**: No mock data, production-ready AI services
 
 ### Database & Storage
+
 - **MongoDB**: NoSQL database for flexible data storage
 - **Prisma ORM**: Type-safe database client and query builder
 - **Redis**: In-memory data store for caching and queues
 
 ### Queue & Background Processing
+
 - **BullMQ**: Advanced Redis-based queue system
 - **Background Jobs**: Asynchronous task processing
 - **Session Persistence**: Offline task continuation
 
 ### API & Documentation
+
 - **Swagger/OpenAPI**: Interactive API documentation
 - **RESTful Design**: Standard HTTP methods and status codes
 - **Real-time Features**: Streaming responses and WebSocket support
 
 ### Security & Validation
+
 - **JWT Authentication**: Secure token-based authentication
 - **class-validator**: Robust input validation
 - **Helmet**: Security middleware for Express
 - **CORS**: Cross-origin resource sharing configuration
 
 ### Development Tools
+
 - **ESLint & Prettier**: Code quality and formatting
 - **Docker**: Containerization support
 - **PM2**: Process management for production
@@ -162,7 +183,7 @@ cp .env.example .env
 Edit the `.env` file with the necessary information:
 
 ```env
-OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_KEY=your_openai_api_key_here
 DATABASE_URL="mongodb://localhost:27017/manus_ai"
 PORT=3000
 ```
@@ -195,6 +216,7 @@ npm run start
 ## 🏗️ System Architecture
 
 ### High-Level Architecture
+
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
 │   Client App    │────│   Manus API     │────│   AI Services   │
@@ -216,6 +238,7 @@ npm run start
 ```
 
 ### Core Modules
+
 - **Agents Module**: AI agent management and execution
 - **Queue Module**: Background job processing with BullMQ
 - **AI Module**: Real AI service integration
@@ -229,6 +252,7 @@ npm run start
 ## 🔄 System Flow
 
 ### Request Processing Flow
+
 ```
 HTTP Request → Validation → Authentication → Service Layer → Queue/AI → Response
      │              │             │              │            │         │
@@ -237,6 +261,7 @@ Client App    DTO Validation   JWT Check    Business Logic  BullMQ    JSON Respo
 ```
 
 ### AI Agent Flow
+
 ```
 1. Agent Selection → 2. Tool Discovery → 3. Context Building
          │                    │                    │
@@ -245,6 +270,7 @@ Client App    DTO Validation   JWT Check    Business Logic  BullMQ    JSON Respo
 ```
 
 ### Background Processing Flow
+
 ```
 API Request → Job Creation → Queue Management → Worker Processing → Result Storage
      │             │              │                   │               │
@@ -255,11 +281,14 @@ User Action   BullMQ Job    Redis Queue         AI Service       MongoDB
 ## 📚 API Documentation
 
 ### Interactive Documentation
+
 Access comprehensive Swagger documentation at:
+
 - **Local Development**: http://localhost:3001/api
 - **API Docs**: http://localhost:3001/docs
 
 ### Base API Structure
+
 ```
 Base URL: http://localhost:3001/api/v1
 Content-Type: application/json
@@ -271,26 +300,32 @@ Authentication: Bearer JWT (where required)
 ### Agent Management
 
 #### 1. List All Agents
+
 ```bash
 GET /api/v1/agents
 ```
+
 **Response:**
+
 ```json
 [
-  {
-    "name": "artistic_inspiration_agent",
-    "description": "Agent specialized in artistic creativity support",
-    "tools": ["search_artworks", "get_inspiration_sources", "..."],
-    "category": "Art & Creativity"
-  }
+	{
+		"name": "artistic_inspiration_agent",
+		"description": "Agent specialized in artistic creativity support",
+		"tools": ["search_artworks", "get_inspiration_sources", "..."],
+		"category": "Art & Creativity"
+	}
 ]
 ```
 
 #### 2. Get Agent Details
+
 ```bash
 GET /api/v1/agents/{agentName}
 ```
+
 **Response:**
+
 ```json
 {
   "name": "artistic_inspiration_agent",
@@ -307,6 +342,7 @@ GET /api/v1/agents/{agentName}
 ### AI Interactions
 
 #### 3. Chat with Agent (Real AI)
+
 ```bash
 POST /api/v1/agents/{agentName}/chat
 Content-Type: application/json
@@ -320,25 +356,28 @@ Content-Type: application/json
       "content": "Previous message"
     },
     {
-      "role": "assistant", 
+      "role": "assistant",
       "content": "Previous response"
     }
   ],
   "conversationId": "conv_12345"
 }
 ```
+
 **Response:**
+
 ```json
 {
-  "agent": "artistic_inspiration_agent",
-  "response": "Renaissance art represents one of the most...",
-  "toolsUsed": ["search_artworks", "web_search"],
-  "timestamp": "2024-01-15T10:30:00Z",
-  "conversationId": "conv_12345"
+	"agent": "artistic_inspiration_agent",
+	"response": "Renaissance art represents one of the most...",
+	"toolsUsed": ["search_artworks", "web_search"],
+	"timestamp": "2024-01-15T10:30:00Z",
+	"conversationId": "conv_12345"
 }
 ```
 
 #### 4. Execute Specific Tool
+
 ```bash
 POST /api/v1/agents/tools/execute
 Content-Type: application/json
@@ -357,6 +396,7 @@ Content-Type: application/json
 ### Background Processing
 
 #### 5. Chat with Background Processing
+
 ```bash
 POST /api/v1/chat
 Content-Type: application/json
@@ -368,35 +408,41 @@ Content-Type: application/json
   "priority": "high"
 }
 ```
+
 **Response:**
+
 ```json
 {
-  "taskId": "task_uuid_123",
-  "status": "queued",
-  "estimatedTime": "2-5 minutes",
-  "sessionId": "session_123"
+	"taskId": "task_uuid_123",
+	"status": "queued",
+	"estimatedTime": "2-5 minutes",
+	"sessionId": "session_123"
 }
 ```
 
 #### 6. Check Task Status
+
 ```bash
 GET /api/v1/chat/task/{taskId}
 ```
+
 **Response:**
+
 ```json
 {
-  "taskId": "task_uuid_123",
-  "status": "completed", // queued, processing, completed, failed
-  "progress": 100,
-  "result": "Generated report content...",
-  "createdAt": "2024-01-15T10:30:00Z",
-  "completedAt": "2024-01-15T10:33:00Z"
+	"taskId": "task_uuid_123",
+	"status": "completed", // queued, processing, completed, failed
+	"progress": 100,
+	"result": "Generated report content...",
+	"createdAt": "2024-01-15T10:30:00Z",
+	"completedAt": "2024-01-15T10:33:00Z"
 }
 ```
 
 ### Content Generation
 
 #### 7. Generate Text Content
+
 ```bash
 POST /api/v1/generate/text
 Content-Type: application/json
@@ -413,6 +459,7 @@ Content-Type: application/json
 ```
 
 #### 8. Generate Code
+
 ```bash
 POST /api/v1/generate/code
 Content-Type: application/json
@@ -428,6 +475,7 @@ Content-Type: application/json
 ### File Operations
 
 #### 9. Edit/Refactor Code
+
 ```bash
 POST /api/v1/edit/refactor
 Content-Type: application/json
@@ -443,6 +491,7 @@ Content-Type: application/json
 ### Session Management
 
 #### 10. Create Session
+
 ```bash
 POST /api/v1/session/create
 Content-Type: application/json
@@ -457,27 +506,31 @@ Content-Type: application/json
 ```
 
 #### 11. Get Session Status
+
 ```bash
 GET /api/v1/session/{sessionId}
 ```
+
 **Response:**
+
 ```json
 {
-  "sessionId": "session_123",
-  "status": "active",
-  "tasksInQueue": 3,
-  "completedTasks": 15,
-  "configuration": {
-    "aiEnabled": true,
-    "queueEnabled": true,
-    "maxConcurrentTasks": 5
-  }
+	"sessionId": "session_123",
+	"status": "active",
+	"tasksInQueue": 3,
+	"completedTasks": 15,
+	"configuration": {
+		"aiEnabled": true,
+		"queueEnabled": true,
+		"maxConcurrentTasks": 5
+	}
 }
 ```
 
 ## 🔧 Specialized Agent Endpoints
 
 ### Artistic Inspiration
+
 ```bash
 POST /api/v1/agents/artistic-inspiration/search
 {
@@ -488,6 +541,7 @@ POST /api/v1/agents/artistic-inspiration/search
 ```
 
 ### Career Planning
+
 ```bash
 POST /api/v1/agents/career-planning/assess-skills
 {
@@ -498,6 +552,7 @@ POST /api/v1/agents/career-planning/assess-skills
 ```
 
 ### Customer Service
+
 ```bash
 POST /api/v1/agents/customer-service/handle-inquiry
 {
@@ -508,6 +563,7 @@ POST /api/v1/agents/customer-service/handle-inquiry
 ```
 
 ### Email Management
+
 ```bash
 POST /api/v1/agents/email-management/compose
 {
@@ -519,6 +575,7 @@ POST /api/v1/agents/email-management/compose
 ```
 
 ### Learning Platform
+
 ```bash
 POST /api/v1/agents/learning-platform/enroll
 {
@@ -530,22 +587,24 @@ POST /api/v1/agents/learning-platform/enroll
 ## 📊 Real-time Features
 
 ### WebSocket Connections
+
 ```javascript
 // Connect to real-time updates
 const socket = io('http://localhost:3001');
 
 // Listen for task progress
 socket.on('task:progress', (data) => {
-  console.log(`Task ${data.taskId}: ${data.progress}%`);
+	console.log(`Task ${data.taskId}: ${data.progress}%`);
 });
 
 // Listen for completion
 socket.on('task:completed', (data) => {
-  console.log('Task completed:', data.result);
+	console.log('Task completed:', data.result);
 });
 ```
 
 ### Streaming Responses
+
 ```bash
 POST /api/v1/chat/stream
 Content-Type: application/json
@@ -556,6 +615,7 @@ Content-Type: application/json
   "stream": true
 }
 ```
+
 **Response:** Server-Sent Events (SSE) stream
 
 ## 📁 Project Structure
@@ -628,18 +688,21 @@ src/
 Manus AI API integrates with Context7 for enhanced documentation and library support:
 
 ### Context7 Features
+
 - **Library Documentation**: Access to comprehensive NestJS and related library docs
 - **Code Examples**: Real-world code snippets and implementations
 - **Best Practices**: Industry-standard patterns and conventions
 - **Tool Integration**: Context7-compatible tools for development assistance
 
 ### Available Context7 Libraries
+
 - **NestJS Core** (`/nestjs/nest`): Main framework documentation
 - **NestJS Prisma** (`/notiz-dev/nestjs-prisma`): Prisma integration patterns
 - **NestJS Bull** (`/nestjs/bull`): Queue processing documentation
 - **NestJS JWT** (`/nestjs/jwt`): Authentication implementation guides
 
 ### Using Context7 in Development
+
 ```bash
 # Access NestJS documentation
 curl -X GET "https://context7.ai/api/docs/nestjs/nest"

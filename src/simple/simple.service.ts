@@ -62,10 +62,14 @@ export class SimpleService {
 		private readonly prisma: PrismaService
 	) {
 		this.llm = new ChatOpenAI({
-			modelName: this.configService.get('OPENAI_MODEL', 'gpt-3.5-turbo'),
+			modelName: process.env.OPENAI_MODEL,
 			temperature: 0.7,
 			maxTokens: 2000,
-			openAIApiKey: this.configService.get('OPENAI_API_KEY'),
+			openAIApiKey: process.env.OPENAI_KEY,
+			configuration: {
+				baseURL: process.env.OPENAI_URL,
+				apiKey: process.env.OPENAI_KEY,
+			},
 		});
 	}
 
@@ -134,7 +138,7 @@ export class SimpleService {
 
 			// Create prompt with system context
 			const prompt = ChatPromptTemplate.fromMessages([
-				['system', promptConfig.modulesPrompt],
+				new SystemMessage(promptConfig.modulesPrompt),
 				new MessagesPlaceholder('chat_history'),
 				['human', '{input}'],
 				new MessagesPlaceholder('agent_scratchpad'),

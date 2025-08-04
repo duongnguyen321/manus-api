@@ -23,10 +23,14 @@ export class LangChainService {
 
 	constructor() {
 		this.llm = new ChatOpenAI({
-			modelName: 'gpt-3.5-turbo',
+			modelName: process.env.OPENAI_MODEL,
 			temperature: 0.7,
 			maxTokens: 2000,
-			openAIApiKey: process.env.OPENAI_API_KEY,
+			openAIApiKey: process.env.OPENAI_KEY,
+			configuration: {
+				baseURL: process.env.OPENAI_URL,
+				apiKey: process.env.OPENAI_KEY,
+			},
 		});
 	}
 
@@ -294,7 +298,7 @@ export class LangChainService {
 			return {
 				response: result.content,
 				timestamp: new Date().toISOString(),
-				model: 'gpt-3.5-turbo',
+				model: process.env.OPENAI_MODEL,
 			};
 		} catch (error) {
 			throw new Error(`Response generation failed: ${error.message}`);
